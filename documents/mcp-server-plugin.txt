@@ -1,0 +1,2920 @@
+├── .github
+    └── workflows
+    │   ├── gradle-build.yaml
+    │   └── publish.yaml
+├── .gitignore
+├── .idea
+    ├── .gitignore
+    ├── gradle.xml
+    ├── inspectionProfiles
+    │   └── Project_Default.xml
+    ├── kotlinc.xml
+    ├── misc.xml
+    └── vcs.xml
+├── .run
+    └── Run IDE with Plugin.run.xml
+├── CODE_OF_CONDUCT.md
+├── LICENSE
+├── README.md
+├── build.gradle.kts
+├── gradle.properties
+├── gradle
+    └── wrapper
+    │   ├── gradle-wrapper.jar
+    │   └── gradle-wrapper.properties
+├── gradlew
+├── gradlew.bat
+├── settings.gradle.kts
+└── src
+    └── main
+        ├── kotlin
+            └── org
+            │   └── jetbrains
+            │       └── mcpserverplugin
+            │           ├── MCPServerStartupValidator.kt
+            │           ├── MCPService.kt
+            │           ├── McpTool.kt
+            │           ├── McpToolManager.kt
+            │           ├── builtinTools.kt
+            │           ├── debuggerTools.kt
+            │           ├── git
+            │               └── vcsTools.kt
+            │           ├── notification
+            │               └── ClaudeConfigManager.kt
+            │           ├── settings
+            │               └── PluginSettings.kt
+            │           └── terminal
+            │               ├── ShTerminalRunner.kt
+            │               └── Terminal.kt
+        └── resources
+            └── META-INF
+                ├── mcpServer-git.xml
+                ├── mcpServer-terminal.xml
+                ├── plugin.xml
+                └── pluginIcon.svg
+
+
+/.github/workflows/gradle-build.yaml:
+--------------------------------------------------------------------------------
+ 1 | name: Gradle build
+ 2 | 
+ 3 | on:
+ 4 |   push:
+ 5 |     branches: [ "master" ]
+ 6 |   pull_request:
+ 7 |     branches: [ "master" ]
+ 8 | 
+ 9 | permissions:
+10 |   contents: read
+11 | 
+12 | jobs:
+13 |   buildPlugin:
+14 |     runs-on: ubuntu-latest
+15 |     steps:
+16 |       - uses: actions/checkout@v3
+17 |       - name: Set up JDK 17
+18 |         uses: actions/setup-java@v3
+19 |         with:
+20 |           java-version: '17'
+21 |           distribution: 'temurin'
+22 |       - name: Build with Gradle
+23 |         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+24 |         with:
+25 |           arguments: clean buildPlugin
+26 |       - name: Store artifacts
+27 |         if: always()
+28 |         uses: actions/upload-artifact@v4
+29 |         with:
+30 |           name: distributions
+31 |           path: |
+32 |             build/distributions/
+33 | 
+
+
+--------------------------------------------------------------------------------
+/.github/workflows/publish.yaml:
+--------------------------------------------------------------------------------
+ 1 | name: Publish to Marketplace
+ 2 | 
+ 3 | on:
+ 4 |   release:
+ 5 |     types: [published]
+ 6 | 
+ 7 | jobs:
+ 8 |   publish:
+ 9 |     runs-on: ubuntu-latest
+10 |     permissions:
+11 |       contents: read
+12 |       id-token: write
+13 |     steps:
+14 |       - uses: actions/checkout@v4
+15 |       - name: Set up JDK 17
+16 |         uses: actions/setup-java@v4
+17 |         with:
+18 |           java-version: '17'
+19 |           distribution: 'temurin'
+20 |       - name: Setup Gradle
+21 |         uses: gradle/actions/setup-gradle@v4
+22 |       - name: Build with Gradle
+23 |         run: ./gradlew -PintellijPlatformPublishingToken=${{ secrets.MARKETPLACE_PUBLISH_TOKEN }} publishPlugin
+24 |       - name: Store artifacts
+25 |         if: always()
+26 |         uses: actions/upload-artifact@v4
+27 |         with:
+28 |           name: distributions
+29 |           path: |
+30 |             build/distributions/
+
+
+--------------------------------------------------------------------------------
+/.gitignore:
+--------------------------------------------------------------------------------
+ 1 | .gradle
+ 2 | build/
+ 3 | !gradle/wrapper/gradle-wrapper.jar
+ 4 | !**/src/main/**/build/
+ 5 | !**/src/test/**/build/
+ 6 | 
+ 7 | ### IntelliJ IDEA ###
+ 8 | .idea/modules.xml
+ 9 | .idea/jarRepositories.xml
+10 | .idea/compiler.xml
+11 | .idea/libraries/
+12 | *.iws
+13 | *.iml
+14 | *.ipr
+15 | out/
+16 | !**/src/main/**/out/
+17 | !**/src/test/**/out/
+18 | .intellijPlatform
+19 | 
+20 | ### Eclipse ###
+21 | .apt_generated
+22 | .classpath
+23 | .factorypath
+24 | .project
+25 | .settings
+26 | .springBeans
+27 | .sts4-cache
+28 | bin/
+29 | !**/src/main/**/bin/
+30 | !**/src/test/**/bin/
+31 | 
+32 | ### NetBeans ###
+33 | /nbproject/private/
+34 | /nbbuild/
+35 | /dist/
+36 | /nbdist/
+37 | /.nb-gradle/
+38 | 
+39 | ### VS Code ###
+40 | .vscode/
+41 | 
+42 | ### Mac OS ###
+43 | .DS_Store
+
+
+--------------------------------------------------------------------------------
+/.idea/.gitignore:
+--------------------------------------------------------------------------------
+1 | # Default ignored files
+2 | /shelf/
+3 | /workspace.xml
+4 | # Editor-based HTTP Client requests
+5 | /httpRequests/
+6 | 
+
+
+--------------------------------------------------------------------------------
+/.idea/gradle.xml:
+--------------------------------------------------------------------------------
+ 1 | <?xml version="1.0" encoding="UTF-8"?>
+ 2 | <project version="4">
+ 3 |   <component name="GradleMigrationSettings" migrationVersion="1" />
+ 4 |   <component name="GradleSettings">
+ 5 |     <option name="linkedExternalProjectsSettings">
+ 6 |       <GradleProjectSettings>
+ 7 |         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+ 8 |         <option name="modules">
+ 9 |           <set>
+10 |             <option value="$PROJECT_DIR$" />
+11 |           </set>
+12 |         </option>
+13 |       </GradleProjectSettings>
+14 |     </option>
+15 |   </component>
+16 | </project>
+
+
+--------------------------------------------------------------------------------
+/.idea/kotlinc.xml:
+--------------------------------------------------------------------------------
+1 | <?xml version="1.0" encoding="UTF-8"?>
+2 | <project version="4">
+3 |   <component name="KotlinJpsPluginSettings">
+4 |     <option name="version" value="1.9.24" />
+5 |   </component>
+6 | </project>
+
+
+--------------------------------------------------------------------------------
+/.idea/misc.xml:
+--------------------------------------------------------------------------------
+ 1 | <?xml version="1.0" encoding="UTF-8"?>
+ 2 | <project version="4">
+ 3 |   <component name="ComposerSettings">
+ 4 |     <execution />
+ 5 |   </component>
+ 6 |   <component name="ExternalStorageConfigurationManager" enabled="true" />
+ 7 |   <component name="FrameworkDetectionExcludesConfiguration">
+ 8 |     <file type="web" url="file://$PROJECT_DIR$" />
+ 9 |   </component>
+10 |   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+11 |     <output url="file://$PROJECT_DIR$/out" />
+12 |   </component>
+13 | </project>
+
+
+--------------------------------------------------------------------------------
+/.idea/vcs.xml:
+--------------------------------------------------------------------------------
+1 | <?xml version="1.0" encoding="UTF-8"?>
+2 | <project version="4">
+3 |   <component name="VcsDirectoryMappings">
+4 |     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+5 |   </component>
+6 | </project>
+
+
+--------------------------------------------------------------------------------
+/.run/Run IDE with Plugin.run.xml:
+--------------------------------------------------------------------------------
+ 1 | <component name="ProjectRunConfigurationManager">
+ 2 |     <configuration default="false" name="Run Plugin" type="GradleRunConfiguration" factoryName="Gradle">
+ 3 |         <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea.log"/>
+ 4 |         <ExternalSystemSettings>
+ 5 |             <option name="executionName"/>
+ 6 |             <option name="externalProjectPath" value="$PROJECT_DIR$"/>
+ 7 |             <option name="externalSystemIdString" value="GRADLE"/>
+ 8 |             <option name="scriptParameters" value=""/>
+ 9 |             <option name="taskDescriptions">
+10 |                 <list/>
+11 |             </option>
+12 |             <option name="taskNames">
+13 |                 <list>
+14 |                     <option value="runIde"/>
+15 |                 </list>
+16 |             </option>
+17 |             <option name="vmOptions" value=""/>
+18 |         </ExternalSystemSettings>
+19 |         <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+20 |         <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+21 |         <DebugAllEnabled>false</DebugAllEnabled>
+22 |         <method v="2"/>
+23 |     </configuration>
+24 | </component>
+
+
+--------------------------------------------------------------------------------
+/CODE_OF_CONDUCT.md:
+--------------------------------------------------------------------------------
+1 | ## Code of Conduct
+2 | 
+3 | This project and the corresponding community is governed by the [JetBrains Open Source and Community Code of Conduct](https://confluence.jetbrains.com/display/ALL/JetBrains+Open+Source+and+Community+Code+of+Conduct). Please make sure you read it. 
+
+
+--------------------------------------------------------------------------------
+/LICENSE:
+--------------------------------------------------------------------------------
+  1 |                                  Apache License
+  2 |                            Version 2.0, January 2004
+  3 |                         http://www.apache.org/licenses/
+  4 | 
+  5 |    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+  6 | 
+  7 |    1. Definitions.
+  8 | 
+  9 |       "License" shall mean the terms and conditions for use, reproduction,
+ 10 |       and distribution as defined by Sections 1 through 9 of this document.
+ 11 | 
+ 12 |       "Licensor" shall mean the copyright owner or entity authorized by
+ 13 |       the copyright owner that is granting the License.
+ 14 | 
+ 15 |       "Legal Entity" shall mean the union of the acting entity and all
+ 16 |       other entities that control, are controlled by, or are under common
+ 17 |       control with that entity. For the purposes of this definition,
+ 18 |       "control" means (i) the power, direct or indirect, to cause the
+ 19 |       direction or management of such entity, whether by contract or
+ 20 |       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+ 21 |       outstanding shares, or (iii) beneficial ownership of such entity.
+ 22 | 
+ 23 |       "You" (or "Your") shall mean an individual or Legal Entity
+ 24 |       exercising permissions granted by this License.
+ 25 | 
+ 26 |       "Source" form shall mean the preferred form for making modifications,
+ 27 |       including but not limited to software source code, documentation
+ 28 |       source, and configuration files.
+ 29 | 
+ 30 |       "Object" form shall mean any form resulting from mechanical
+ 31 |       transformation or translation of a Source form, including but
+ 32 |       not limited to compiled object code, generated documentation,
+ 33 |       and conversions to other media types.
+ 34 | 
+ 35 |       "Work" shall mean the work of authorship, whether in Source or
+ 36 |       Object form, made available under the License, as indicated by a
+ 37 |       copyright notice that is included in or attached to the work
+ 38 |       (an example is provided in the Appendix below).
+ 39 | 
+ 40 |       "Derivative Works" shall mean any work, whether in Source or Object
+ 41 |       form, that is based on (or derived from) the Work and for which the
+ 42 |       editorial revisions, annotations, elaborations, or other modifications
+ 43 |       represent, as a whole, an original work of authorship. For the purposes
+ 44 |       of this License, Derivative Works shall not include works that remain
+ 45 |       separable from, or merely link (or bind by name) to the interfaces of,
+ 46 |       the Work and Derivative Works thereof.
+ 47 | 
+ 48 |       "Contribution" shall mean any work of authorship, including
+ 49 |       the original version of the Work and any modifications or additions
+ 50 |       to that Work or Derivative Works thereof, that is intentionally
+ 51 |       submitted to Licensor for inclusion in the Work by the copyright owner
+ 52 |       or by an individual or Legal Entity authorized to submit on behalf of
+ 53 |       the copyright owner. For the purposes of this definition, "submitted"
+ 54 |       means any form of electronic, verbal, or written communication sent
+ 55 |       to the Licensor or its representatives, including but not limited to
+ 56 |       communication on electronic mailing lists, source code control systems,
+ 57 |       and issue tracking systems that are managed by, or on behalf of, the
+ 58 |       Licensor for the purpose of discussing and improving the Work, but
+ 59 |       excluding communication that is conspicuously marked or otherwise
+ 60 |       designated in writing by the copyright owner as "Not a Contribution."
+ 61 | 
+ 62 |       "Contributor" shall mean Licensor and any individual or Legal Entity
+ 63 |       on behalf of whom a Contribution has been received by Licensor and
+ 64 |       subsequently incorporated within the Work.
+ 65 | 
+ 66 |    2. Grant of Copyright License. Subject to the terms and conditions of
+ 67 |       this License, each Contributor hereby grants to You a perpetual,
+ 68 |       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+ 69 |       copyright license to reproduce, prepare Derivative Works of,
+ 70 |       publicly display, publicly perform, sublicense, and distribute the
+ 71 |       Work and such Derivative Works in Source or Object form.
+ 72 | 
+ 73 |    3. Grant of Patent License. Subject to the terms and conditions of
+ 74 |       this License, each Contributor hereby grants to You a perpetual,
+ 75 |       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+ 76 |       (except as stated in this section) patent license to make, have made,
+ 77 |       use, offer to sell, sell, import, and otherwise transfer the Work,
+ 78 |       where such license applies only to those patent claims licensable
+ 79 |       by such Contributor that are necessarily infringed by their
+ 80 |       Contribution(s) alone or by combination of their Contribution(s)
+ 81 |       with the Work to which such Contribution(s) was submitted. If You
+ 82 |       institute patent litigation against any entity (including a
+ 83 |       cross-claim or counterclaim in a lawsuit) alleging that the Work
+ 84 |       or a Contribution incorporated within the Work constitutes direct
+ 85 |       or contributory patent infringement, then any patent licenses
+ 86 |       granted to You under this License for that Work shall terminate
+ 87 |       as of the date such litigation is filed.
+ 88 | 
+ 89 |    4. Redistribution. You may reproduce and distribute copies of the
+ 90 |       Work or Derivative Works thereof in any medium, with or without
+ 91 |       modifications, and in Source or Object form, provided that You
+ 92 |       meet the following conditions:
+ 93 | 
+ 94 |       (a) You must give any other recipients of the Work or
+ 95 |           Derivative Works a copy of this License; and
+ 96 | 
+ 97 |       (b) You must cause any modified files to carry prominent notices
+ 98 |           stating that You changed the files; and
+ 99 | 
+100 |       (c) You must retain, in the Source form of any Derivative Works
+101 |           that You distribute, all copyright, patent, trademark, and
+102 |           attribution notices from the Source form of the Work,
+103 |           excluding those notices that do not pertain to any part of
+104 |           the Derivative Works; and
+105 | 
+106 |       (d) If the Work includes a "NOTICE" text file as part of its
+107 |           distribution, then any Derivative Works that You distribute must
+108 |           include a readable copy of the attribution notices contained
+109 |           within such NOTICE file, excluding those notices that do not
+110 |           pertain to any part of the Derivative Works, in at least one
+111 |           of the following places: within a NOTICE text file distributed
+112 |           as part of the Derivative Works; within the Source form or
+113 |           documentation, if provided along with the Derivative Works; or,
+114 |           within a display generated by the Derivative Works, if and
+115 |           wherever such third-party notices normally appear. The contents
+116 |           of the NOTICE file are for informational purposes only and
+117 |           do not modify the License. You may add Your own attribution
+118 |           notices within Derivative Works that You distribute, alongside
+119 |           or as an addendum to the NOTICE text from the Work, provided
+120 |           that such additional attribution notices cannot be construed
+121 |           as modifying the License.
+122 | 
+123 |       You may add Your own copyright statement to Your modifications and
+124 |       may provide additional or different license terms and conditions
+125 |       for use, reproduction, or distribution of Your modifications, or
+126 |       for any such Derivative Works as a whole, provided Your use,
+127 |       reproduction, and distribution of the Work otherwise complies with
+128 |       the conditions stated in this License.
+129 | 
+130 |    5. Submission of Contributions. Unless You explicitly state otherwise,
+131 |       any Contribution intentionally submitted for inclusion in the Work
+132 |       by You to the Licensor shall be under the terms and conditions of
+133 |       this License, without any additional terms or conditions.
+134 |       Notwithstanding the above, nothing herein shall supersede or modify
+135 |       the terms of any separate license agreement you may have executed
+136 |       with Licensor regarding such Contributions.
+137 | 
+138 |    6. Trademarks. This License does not grant permission to use the trade
+139 |       names, trademarks, service marks, or product names of the Licensor,
+140 |       except as required for reasonable and customary use in describing the
+141 |       origin of the Work and reproducing the content of the NOTICE file.
+142 | 
+143 |    7. Disclaimer of Warranty. Unless required by applicable law or
+144 |       agreed to in writing, Licensor provides the Work (and each
+145 |       Contributor provides its Contributions) on an "AS IS" BASIS,
+146 |       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+147 |       implied, including, without limitation, any warranties or conditions
+148 |       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+149 |       PARTICULAR PURPOSE. You are solely responsible for determining the
+150 |       appropriateness of using or redistributing the Work and assume any
+151 |       risks associated with Your exercise of permissions under this License.
+152 | 
+153 |    8. Limitation of Liability. In no event and under no legal theory,
+154 |       whether in tort (including negligence), contract, or otherwise,
+155 |       unless required by applicable law (such as deliberate and grossly
+156 |       negligent acts) or agreed to in writing, shall any Contributor be
+157 |       liable to You for damages, including any direct, indirect, special,
+158 |       incidental, or consequential damages of any character arising as a
+159 |       result of this License or out of the use or inability to use the
+160 |       Work (including but not limited to damages for loss of goodwill,
+161 |       work stoppage, computer failure or malfunction, or any and all
+162 |       other commercial damages or losses), even if such Contributor
+163 |       has been advised of the possibility of such damages.
+164 | 
+165 |    9. Accepting Warranty or Additional Liability. While redistributing
+166 |       the Work or Derivative Works thereof, You may choose to offer,
+167 |       and charge a fee for, acceptance of support, warranty, indemnity,
+168 |       or other liability obligations and/or rights consistent with this
+169 |       License. However, in accepting such obligations, You may act only
+170 |       on Your own behalf and on Your sole responsibility, not on behalf
+171 |       of any other Contributor, and only if You agree to indemnify,
+172 |       defend, and hold each Contributor harmless for any liability
+173 |       incurred by, or claims asserted against, such Contributor by reason
+174 |       of your accepting any such warranty or additional liability.
+175 | 
+176 |    END OF TERMS AND CONDITIONS
+177 | 
+178 |    APPENDIX: How to apply the Apache License to your work.
+179 | 
+180 |       To apply the Apache License to your work, attach the following
+181 |       boilerplate notice, with the fields enclosed by brackets "[]"
+182 |       replaced with your own identifying information. (Don't include
+183 |       the brackets!)  The text should be enclosed in the appropriate
+184 |       comment syntax for the file format. We also recommend that a
+185 |       file or class name and description of purpose be included on the
+186 |       same "printed page" as the copyright notice for easier
+187 |       identification within third-party archives.
+188 | 
+189 |    Copyright [yyyy] [name of copyright owner]
+190 | 
+191 |    Licensed under the Apache License, Version 2.0 (the "License");
+192 |    you may not use this file except in compliance with the License.
+193 |    You may obtain a copy of the License at
+194 | 
+195 |        http://www.apache.org/licenses/LICENSE-2.0
+196 | 
+197 |    Unless required by applicable law or agreed to in writing, software
+198 |    distributed under the License is distributed on an "AS IS" BASIS,
+199 |    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+200 |    See the License for the specific language governing permissions and
+201 |    limitations under the License.
+
+
+--------------------------------------------------------------------------------
+/README.md:
+--------------------------------------------------------------------------------
+ 1 | [![official JetBrains project](http://jb.gg/badges/incubator-flat-square.svg)](https://github.com/JetBrains#jetbrains-on-github)
+ 2 | # JetBrains MCP Server Plugin
+ 3 | 
+ 4 | JetBrains MCP (Model Context Protocol) Server Plugin enables seamless integration between Large Language Models (LLMs) and JetBrains IDEs. This plugin provides the server-side implementation for handling MCP requests and exposes extension points for implementing custom tools.
+ 5 | 
+ 6 | ## Prerequisites
+ 7 | 
+ 8 | - Installation of [JetBrains MCP Proxy](https://github.com/JetBrains/mcpProxy)
+ 9 | - JetBrains IDE (IntelliJ IDEA, WebStorm, etc.)
+10 | 
+11 | ## Custom Tools Implementation
+12 | 
+13 | The plugin provides an extension point system that allows third-party plugins to implement their own MCP tools. Here's how to implement and register your custom tools:
+14 | 
+15 | ### 1. Creating a Custom Tool
+16 | 
+17 | Create a class that extends `AbstractMcpTool`:
+18 | 
+19 | ```kotlin
+20 | class MyCustomTool : AbstractMcpTool<MyArgs>() {
+21 |     override val name: String = "myCustomTool"
+22 |     override val description: String = "Description of what your tool does"
+23 | 
+24 |     override fun handle(project: Project, args: MyArgs): Response {
+25 |         // Implement your tool's logic here
+26 |         return Response.ok("Result")
+27 |     }
+28 | }
+29 | 
+30 | // Define your arguments data class
+31 | @Serializable
+32 | data class MyArgs(
+33 |     val param1: String,
+34 |     val param2: Int
+35 | )
+36 | ```
+37 | 
+38 | ### 2. Registering Your Tool
+39 | 
+40 | To register your tool, add it as an extension in your plugin.xml:
+41 | 
+42 | ```xml
+43 | <idea-plugin>
+44 |     <!-- Your plugin config -->
+45 |     <depends>com.intellij.mcpServer</depends>
+46 |     
+47 |     <extensions defaultExtensionNs="com.intellij.mcpServer">
+48 |         <mcpTool implementation="com.example.MyCustomTool"/>
+49 |     </extensions>
+50 | </idea-plugin>
+51 | ```
+52 | 
+53 | ### 3. Tool Implementation Guidelines
+54 | 
+55 | Your tool implementation should follow these guidelines:
+56 | 
+57 | - Tool names should be descriptive and use lowercase with optional underscores
+58 | - Create a data class for your tool's arguments that matches the expected JSON input
+59 | - Use the Response class appropriately:
+60 |   - `Response(result)` for successful operations
+61 |   - `Response(error = message)` for error cases
+62 | - Utilize the provided Project instance for accessing IDE services
+63 | 
+64 | ## How to Publish Update
+65 | 1. Update `settings.gradle.kts` to provide a new version 
+66 | 2. Create release on Github, the publishing task will be automatically triggered
+67 | 
+68 | ## Contributing
+69 | 
+70 | We welcome contributions! Please feel free to submit a Pull Request.
+71 | 
+
+
+--------------------------------------------------------------------------------
+/build.gradle.kts:
+--------------------------------------------------------------------------------
+ 1 | import com.jetbrains.plugin.structure.base.utils.contentBuilder.buildDirectory
+ 2 | import com.jetbrains.plugin.structure.base.utils.contentBuilder.buildZipFile
+ 3 | import org.gradle.kotlin.dsl.intellijPlatform
+ 4 | import java.util.*
+ 5 | import org.jetbrains.intellij.platform.gradle.*
+ 6 | import org.jetbrains.intellij.platform.gradle.models.*
+ 7 | import org.jetbrains.intellij.platform.gradle.tasks.*
+ 8 | import org.jetbrains.intellij.platform.gradle.utils.settings
+ 9 | 
+10 | plugins {
+11 |     id("org.jetbrains.intellij.platform") version "2.2.0"
+12 |     kotlin("jvm") version "1.9.24"
+13 |     kotlin("plugin.serialization") version "1.9.24"
+14 | }
+15 | 
+16 | repositories {
+17 |     mavenCentral()
+18 | 
+19 |     intellijPlatform {
+20 |         defaultRepositories()
+21 |     }
+22 | }
+23 | 
+24 | dependencies {
+25 |     intellijPlatform {
+26 |         intellijIdeaCommunity("2024.3")
+27 | 
+28 |         bundledPlugin("org.jetbrains.plugins.terminal")
+29 |         bundledPlugin("Git4Idea")
+30 |     }
+31 | }
+32 | 
+33 | dependencies {
+34 |     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+35 | }
+36 | 
+37 | intellijPlatform {
+38 |     pluginConfiguration {
+39 |         version = settings.extra["pluginVersion"] as String
+40 |         ideaVersion {
+41 |             sinceBuild.set("242")
+42 |             untilBuild.set("251.*")
+43 |         }
+44 |     }
+45 |     publishing {
+46 |         token = providers.gradleProperty("intellijPlatformPublishingToken")
+47 |     }
+48 | }
+49 | 
+50 | kotlin {
+51 |     jvmToolchain(17)
+52 | }
+53 | 
+54 | 
+
+
+--------------------------------------------------------------------------------
+/gradle.properties:
+--------------------------------------------------------------------------------
+1 | # Opt-out flag for bundling Kotlin standard library -> https://jb.gg/intellij-platform-kotlin-stdlib
+2 | kotlin.stdlib.default.dependency=false
+3 | # Enable Gradle Configuration Cache -> https://docs.gradle.org/current/userguide/configuration_cache.html
+4 | org.gradle.configuration-cache=true
+5 | # Enable Gradle Build Cache -> https://docs.gradle.org/current/userguide/build_cache.html
+6 | org.gradle.caching=true
+7 | 
+
+
+--------------------------------------------------------------------------------
+/gradle/wrapper/gradle-wrapper.jar:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/JetBrains/mcp-server-plugin/393d0e37710bf652fead87136df9ade5d92fa5a8/gradle/wrapper/gradle-wrapper.jar
+
+
+--------------------------------------------------------------------------------
+/gradle/wrapper/gradle-wrapper.properties:
+--------------------------------------------------------------------------------
+1 | distributionBase=GRADLE_USER_HOME
+2 | distributionPath=wrapper/dists
+3 | distributionUrl=https\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+4 | zipStoreBase=GRADLE_USER_HOME
+5 | zipStorePath=wrapper/dists
+6 | 
+
+
+--------------------------------------------------------------------------------
+/gradlew:
+--------------------------------------------------------------------------------
+  1 | #!/bin/sh
+  2 | 
+  3 | #
+  4 | # Copyright © 2015-2021 the original authors.
+  5 | #
+  6 | # Licensed under the Apache License, Version 2.0 (the "License");
+  7 | # you may not use this file except in compliance with the License.
+  8 | # You may obtain a copy of the License at
+  9 | #
+ 10 | #      https://www.apache.org/licenses/LICENSE-2.0
+ 11 | #
+ 12 | # Unless required by applicable law or agreed to in writing, software
+ 13 | # distributed under the License is distributed on an "AS IS" BASIS,
+ 14 | # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ 15 | # See the License for the specific language governing permissions and
+ 16 | # limitations under the License.
+ 17 | #
+ 18 | 
+ 19 | ##############################################################################
+ 20 | #
+ 21 | #   Gradle start up script for POSIX generated by Gradle.
+ 22 | #
+ 23 | #   Important for running:
+ 24 | #
+ 25 | #   (1) You need a POSIX-compliant shell to run this script. If your /bin/sh is
+ 26 | #       noncompliant, but you have some other compliant shell such as ksh or
+ 27 | #       bash, then to run this script, type that shell name before the whole
+ 28 | #       command line, like:
+ 29 | #
+ 30 | #           ksh Gradle
+ 31 | #
+ 32 | #       Busybox and similar reduced shells will NOT work, because this script
+ 33 | #       requires all of these POSIX shell features:
+ 34 | #         * functions;
+ 35 | #         * expansions «$var», «${var}», «${var:-default}», «${var+SET}»,
+ 36 | #           «${var#prefix}», «${var%suffix}», and «$( cmd )»;
+ 37 | #         * compound commands having a testable exit status, especially «case»;
+ 38 | #         * various built-in commands including «command», «set», and «ulimit».
+ 39 | #
+ 40 | #   Important for patching:
+ 41 | #
+ 42 | #   (2) This script targets any POSIX shell, so it avoids extensions provided
+ 43 | #       by Bash, Ksh, etc; in particular arrays are avoided.
+ 44 | #
+ 45 | #       The "traditional" practice of packing multiple parameters into a
+ 46 | #       space-separated string is a well documented source of bugs and security
+ 47 | #       problems, so this is (mostly) avoided, by progressively accumulating
+ 48 | #       options in "$@", and eventually passing that to Java.
+ 49 | #
+ 50 | #       Where the inherited environment variables (DEFAULT_JVM_OPTS, JAVA_OPTS,
+ 51 | #       and GRADLE_OPTS) rely on word-splitting, this is performed explicitly;
+ 52 | #       see the in-line comments for details.
+ 53 | #
+ 54 | #       There are tweaks for specific operating systems such as AIX, CygWin,
+ 55 | #       Darwin, MinGW, and NonStop.
+ 56 | #
+ 57 | #   (3) This script is generated from the Groovy template
+ 58 | #       https://github.com/gradle/gradle/blob/master/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+ 59 | #       within the Gradle project.
+ 60 | #
+ 61 | #       You can find Gradle at https://github.com/gradle/gradle/.
+ 62 | #
+ 63 | ##############################################################################
+ 64 | 
+ 65 | # Attempt to set APP_HOME
+ 66 | 
+ 67 | # Resolve links: $0 may be a link
+ 68 | app_path=$0
+ 69 | 
+ 70 | # Need this for daisy-chained symlinks.
+ 71 | while
+ 72 |     APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
+ 73 |     [ -h "$app_path" ]
+ 74 | do
+ 75 |     ls=$( ls -ld "$app_path" )
+ 76 |     link=${ls#*' -> '}
+ 77 |     case $link in             #(
+ 78 |       /*)   app_path=$link ;; #(
+ 79 |       *)    app_path=$APP_HOME$link ;;
+ 80 |     esac
+ 81 | done
+ 82 | 
+ 83 | APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit
+ 84 | 
+ 85 | APP_NAME="Gradle"
+ 86 | APP_BASE_NAME=${0##*/}
+ 87 | 
+ 88 | # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+ 89 | DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+ 90 | 
+ 91 | # Use the maximum available, or set MAX_FD != -1 to use that value.
+ 92 | MAX_FD=maximum
+ 93 | 
+ 94 | warn () {
+ 95 |     echo "$*"
+ 96 | } >&2
+ 97 | 
+ 98 | die () {
+ 99 |     echo
+100 |     echo "$*"
+101 |     echo
+102 |     exit 1
+103 | } >&2
+104 | 
+105 | # OS specific support (must be 'true' or 'false').
+106 | cygwin=false
+107 | msys=false
+108 | darwin=false
+109 | nonstop=false
+110 | case "$( uname )" in                #(
+111 |   CYGWIN* )         cygwin=true  ;; #(
+112 |   Darwin* )         darwin=true  ;; #(
+113 |   MSYS* | MINGW* )  msys=true    ;; #(
+114 |   NONSTOP* )        nonstop=true ;;
+115 | esac
+116 | 
+117 | CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+118 | 
+119 | 
+120 | # Determine the Java command to use to start the JVM.
+121 | if [ -n "$JAVA_HOME" ] ; then
+122 |     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+123 |         # IBM's JDK on AIX uses strange locations for the executables
+124 |         JAVACMD=$JAVA_HOME/jre/sh/java
+125 |     else
+126 |         JAVACMD=$JAVA_HOME/bin/java
+127 |     fi
+128 |     if [ ! -x "$JAVACMD" ] ; then
+129 |         die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+130 | 
+131 | Please set the JAVA_HOME variable in your environment to match the
+132 | location of your Java installation."
+133 |     fi
+134 | else
+135 |     JAVACMD=java
+136 |     which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+137 | 
+138 | Please set the JAVA_HOME variable in your environment to match the
+139 | location of your Java installation."
+140 | fi
+141 | 
+142 | # Increase the maximum file descriptors if we can.
+143 | if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
+144 |     case $MAX_FD in #(
+145 |       max*)
+146 |         MAX_FD=$( ulimit -H -n ) ||
+147 |             warn "Could not query maximum file descriptor limit"
+148 |     esac
+149 |     case $MAX_FD in  #(
+150 |       '' | soft) :;; #(
+151 |       *)
+152 |         ulimit -n "$MAX_FD" ||
+153 |             warn "Could not set maximum file descriptor limit to $MAX_FD"
+154 |     esac
+155 | fi
+156 | 
+157 | # Collect all arguments for the java command, stacking in reverse order:
+158 | #   * args from the command line
+159 | #   * the main class name
+160 | #   * -classpath
+161 | #   * -D...appname settings
+162 | #   * --module-path (only if needed)
+163 | #   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
+164 | 
+165 | # For Cygwin or MSYS, switch paths to Windows format before running java
+166 | if "$cygwin" || "$msys" ; then
+167 |     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
+168 |     CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
+169 | 
+170 |     JAVACMD=$( cygpath --unix "$JAVACMD" )
+171 | 
+172 |     # Now convert the arguments - kludge to limit ourselves to /bin/sh
+173 |     for arg do
+174 |         if
+175 |             case $arg in                                #(
+176 |               -*)   false ;;                            # don't mess with options #(
+177 |               /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
+178 |                     [ -e "$t" ] ;;                      #(
+179 |               *)    false ;;
+180 |             esac
+181 |         then
+182 |             arg=$( cygpath --path --ignore --mixed "$arg" )
+183 |         fi
+184 |         # Roll the args list around exactly as many times as the number of
+185 |         # args, so each arg winds up back in the position where it started, but
+186 |         # possibly modified.
+187 |         #
+188 |         # NB: a `for` loop captures its iteration list before it begins, so
+189 |         # changing the positional parameters here affects neither the number of
+190 |         # iterations, nor the values presented in `arg`.
+191 |         shift                   # remove old arg
+192 |         set -- "$@" "$arg"      # push replacement arg
+193 |     done
+194 | fi
+195 | 
+196 | # Collect all arguments for the java command;
+197 | #   * $DEFAULT_JVM_OPTS, $JAVA_OPTS, and $GRADLE_OPTS can contain fragments of
+198 | #     shell script including quotes and variable substitutions, so put them in
+199 | #     double quotes to make sure that they get re-expanded; and
+200 | #   * put everything else in single quotes, so that it's not re-expanded.
+201 | 
+202 | set -- \
+203 |         "-Dorg.gradle.appname=$APP_BASE_NAME" \
+204 |         -classpath "$CLASSPATH" \
+205 |         org.gradle.wrapper.GradleWrapperMain \
+206 |         "$@"
+207 | 
+208 | # Use "xargs" to parse quoted args.
+209 | #
+210 | # With -n1 it outputs one arg per line, with the quotes and backslashes removed.
+211 | #
+212 | # In Bash we could simply go:
+213 | #
+214 | #   readarray ARGS < <( xargs -n1 <<<"$var" ) &&
+215 | #   set -- "${ARGS[@]}" "$@"
+216 | #
+217 | # but POSIX shell has neither arrays nor command substitution, so instead we
+218 | # post-process each arg (as a line of input to sed) to backslash-escape any
+219 | # character that might be a shell metacharacter, then use eval to reverse
+220 | # that process (while maintaining the separation between arguments), and wrap
+221 | # the whole thing up as a single "set" statement.
+222 | #
+223 | # This will of course break if any of these variables contains a newline or
+224 | # an unmatched quote.
+225 | #
+226 | 
+227 | eval "set -- $(
+228 |         printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
+229 |         xargs -n1 |
+230 |         sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
+231 |         tr '\n' ' '
+232 |     )" '"$@"'
+233 | 
+234 | exec "$JAVACMD" "$@"
+235 | 
+
+
+--------------------------------------------------------------------------------
+/gradlew.bat:
+--------------------------------------------------------------------------------
+ 1 | @rem
+ 2 | @rem Copyright 2015 the original author or authors.
+ 3 | @rem
+ 4 | @rem Licensed under the Apache License, Version 2.0 (the "License");
+ 5 | @rem you may not use this file except in compliance with the License.
+ 6 | @rem You may obtain a copy of the License at
+ 7 | @rem
+ 8 | @rem      https://www.apache.org/licenses/LICENSE-2.0
+ 9 | @rem
+10 | @rem Unless required by applicable law or agreed to in writing, software
+11 | @rem distributed under the License is distributed on an "AS IS" BASIS,
+12 | @rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+13 | @rem See the License for the specific language governing permissions and
+14 | @rem limitations under the License.
+15 | @rem
+16 | 
+17 | @if "%DEBUG%" == "" @echo off
+18 | @rem ##########################################################################
+19 | @rem
+20 | @rem  Gradle startup script for Windows
+21 | @rem
+22 | @rem ##########################################################################
+23 | 
+24 | @rem Set local scope for the variables with windows NT shell
+25 | if "%OS%"=="Windows_NT" setlocal
+26 | 
+27 | set DIRNAME=%~dp0
+28 | if "%DIRNAME%" == "" set DIRNAME=.
+29 | set APP_BASE_NAME=%~n0
+30 | set APP_HOME=%DIRNAME%
+31 | 
+32 | @rem Resolve any "." and ".." in APP_HOME to make it shorter.
+33 | for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+34 | 
+35 | @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+36 | set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+37 | 
+38 | @rem Find java.exe
+39 | if defined JAVA_HOME goto findJavaFromJavaHome
+40 | 
+41 | set JAVA_EXE=java.exe
+42 | %JAVA_EXE% -version >NUL 2>&1
+43 | if "%ERRORLEVEL%" == "0" goto execute
+44 | 
+45 | echo.
+46 | echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+47 | echo.
+48 | echo Please set the JAVA_HOME variable in your environment to match the
+49 | echo location of your Java installation.
+50 | 
+51 | goto fail
+52 | 
+53 | :findJavaFromJavaHome
+54 | set JAVA_HOME=%JAVA_HOME:"=%
+55 | set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+56 | 
+57 | if exist "%JAVA_EXE%" goto execute
+58 | 
+59 | echo.
+60 | echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
+61 | echo.
+62 | echo Please set the JAVA_HOME variable in your environment to match the
+63 | echo location of your Java installation.
+64 | 
+65 | goto fail
+66 | 
+67 | :execute
+68 | @rem Setup the command line
+69 | 
+70 | set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+71 | 
+72 | 
+73 | @rem Execute Gradle
+74 | "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+75 | 
+76 | :end
+77 | @rem End local scope for the variables with windows NT shell
+78 | if "%ERRORLEVEL%"=="0" goto mainEnd
+79 | 
+80 | :fail
+81 | rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+82 | rem the _cmd.exe /c_ return code!
+83 | if  not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
+84 | exit /b 1
+85 | 
+86 | :mainEnd
+87 | if "%OS%"=="Windows_NT" endlocal
+88 | 
+89 | :omega
+90 | 
+
+
+--------------------------------------------------------------------------------
+/settings.gradle.kts:
+--------------------------------------------------------------------------------
+1 | pluginManagement {
+2 |     repositories {
+3 |         mavenCentral()
+4 |         gradlePluginPortal()
+5 |     }
+6 | }
+7 | 
+8 | rootProject.name = "mcp-server-plugin"
+9 | extra["pluginVersion"] = "1.0.16"
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/MCPServerStartupValidator.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.mcpserverplugin
+  2 | 
+  3 | import com.intellij.execution.configurations.GeneralCommandLine
+  4 | import com.intellij.execution.process.OSProcessHandler
+  5 | import com.intellij.execution.process.ProcessAdapter
+  6 | import com.intellij.execution.process.ProcessEvent
+  7 | import com.intellij.execution.process.ProcessOutputTypes
+  8 | import com.intellij.ide.BrowserUtil
+  9 | import com.intellij.notification.NotificationAction
+ 10 | import com.intellij.notification.NotificationGroupManager
+ 11 | import com.intellij.notification.NotificationType
+ 12 | import com.intellij.openapi.components.service
+ 13 | import com.intellij.openapi.diagnostic.logger
+ 14 | import com.intellij.openapi.project.Project
+ 15 | import com.intellij.openapi.startup.ProjectActivity
+ 16 | import com.intellij.openapi.util.Key
+ 17 | import com.intellij.openapi.util.SystemInfo
+ 18 | import org.jetbrains.mcpserverplugin.notification.ClaudeConfigManager
+ 19 | import org.jetbrains.mcpserverplugin.settings.PluginSettings
+ 20 | import java.io.File
+ 21 | 
+ 22 | internal class MCPServerStartupValidator : ProjectActivity {
+ 23 |     private val GROUP_ID = "MCPServerPlugin"
+ 24 | 
+ 25 |     val logger by lazy { logger<MCPServerStartupValidator>() }
+ 26 | 
+ 27 |     fun isNpxInstalled(): Boolean {
+ 28 |         return try {
+ 29 |             logger.info("Starting npx installation check")
+ 30 |             if (SystemInfo.isWindows) {
+ 31 |                 logger.info("Detected Windows OS, using 'where' command")
+ 32 |                 checkNpxWindows()
+ 33 |             } else {
+ 34 |                 logger.info("Detected non-Windows OS, checking known locations")
+ 35 |                 checkNpxUnix()
+ 36 |             }
+ 37 |         } catch (e: Exception) {
+ 38 |             logger.error("Failed to check npx installation", e)
+ 39 |             logger.error("Exception details - Class: ${e.javaClass.name}, Message: ${e.message}")
+ 40 |             false
+ 41 |         }
+ 42 |     }
+ 43 | 
+ 44 |     private fun checkNpxWindows(): Boolean {
+ 45 |         val commandLine = GeneralCommandLine("where", "npx")
+ 46 |         logger.info("Windows - Environment PATH: ${commandLine.environment["PATH"]}")
+ 47 | 
+ 48 |         val handler = OSProcessHandler(commandLine)
+ 49 |         val output = StringBuilder()
+ 50 |         val error = StringBuilder()
+ 51 | 
+ 52 |         handler.addProcessListener(object : ProcessAdapter() {
+ 53 |             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+ 54 |                 when (outputType) {
+ 55 |                     ProcessOutputTypes.STDOUT -> output.append(event.text)
+ 56 |                     ProcessOutputTypes.STDERR -> error.append(event.text)
+ 57 |                 }
+ 58 |             }
+ 59 |         })
+ 60 | 
+ 61 |         handler.startNotify()
+ 62 |         val completed = handler.waitFor(5000)
+ 63 | 
+ 64 |         logger.info("Windows - where npx completed with success: $completed")
+ 65 |         if (output.isNotBlank()) logger.info("Windows - Output: $output")
+ 66 |         if (error.isNotBlank()) logger.warn("Windows - Error: $error")
+ 67 | 
+ 68 |         return completed && handler.exitCode == 0
+ 69 |     }
+ 70 | 
+ 71 |     private fun checkNpxUnix(): Boolean {
+ 72 |         // First try checking known locations including user-specific installations
+ 73 |         val homeDir = System.getProperty("user.home")
+ 74 |         val knownPaths = listOf(
+ 75 |             "/opt/homebrew/bin/npx",
+ 76 |             "/usr/local/bin/npx",
+ 77 |             "/usr/bin/npx",
+ 78 |             "$homeDir/.volta/bin/npx",  // Volta installation
+ 79 |             "$homeDir/.nvm/current/bin/npx",  // NVM installation
+ 80 |             "$homeDir/.npm-global/bin/npx"    // NPM global installation
+ 81 |         )
+ 82 | 
+ 83 |         logger.info("Unix - Checking known npx locations: ${knownPaths.joinToString(", ")}")
+ 84 | 
+ 85 |         val existingPath = knownPaths.find { path ->
+ 86 |             File(path).also {
+ 87 |                 logger.info("Unix - Checking path: $path exists: ${it.exists()}")
+ 88 |             }.exists()
+ 89 |         }
+ 90 | 
+ 91 |         if (existingPath != null) {
+ 92 |             logger.info("Unix - Found npx at: $existingPath")
+ 93 |             return true
+ 94 |         }
+ 95 | 
+ 96 |         // Fallback to which command with extended PATH
+ 97 |         logger.info("Unix - No npx found in known locations, trying which command")
+ 98 |         val commandLine = GeneralCommandLine("which", "npx")
+ 99 |         
+100 |         // Add all potential paths to PATH
+101 |         val currentPath = System.getenv("PATH") ?: ""
+102 |         val additionalPaths = listOf(
+103 |             "/opt/homebrew/bin",
+104 |             "/opt/homebrew/sbin",
+105 |             "/usr/local/bin",
+106 |             "$homeDir/.volta/bin",
+107 |             "$homeDir/.nvm/current/bin",
+108 |             "$homeDir/.npm-global/bin"
+109 |         ).joinToString(":")
+110 |         commandLine.environment["PATH"] = "$additionalPaths:$currentPath"
+111 |         logger.info("Unix - Modified PATH for which command: ${commandLine.environment["PATH"]}")
+112 | 
+113 |         val handler = OSProcessHandler(commandLine)
+114 |         val output = StringBuilder()
+115 |         val error = StringBuilder()
+116 | 
+117 |         handler.addProcessListener(object : ProcessAdapter() {
+118 |             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+119 |                 when (outputType) {
+120 |                     ProcessOutputTypes.STDOUT -> output.append(event.text)
+121 |                     ProcessOutputTypes.STDERR -> error.append(event.text)
+122 |                 }
+123 |             }
+124 |         })
+125 | 
+126 |         handler.startNotify()
+127 |         val completed = handler.waitFor(5000)
+128 | 
+129 |         logger.info("Unix - which npx completed with success: $completed")
+130 |         logger.info("Unix - which npx completed with code: ${handler.exitCode}")
+131 |         if (output.isNotBlank()) logger.info("Unix - Output: $output")
+132 |         if (error.isNotBlank()) logger.warn("Unix - Error: $error")
+133 | 
+134 |         return completed && handler.exitCode == 0
+135 |     }
+136 | 
+137 |     override suspend fun execute(project: Project) {
+138 |         val notificationGroup = NotificationGroupManager.getInstance().getNotificationGroup(GROUP_ID)
+139 |         val settingsService = service<PluginSettings>()
+140 |         if (SystemInfo.isLinux) {
+141 |             logger.info("No Claude Client on Linux, skipping validation")
+142 |             return
+143 |         }
+144 |         if (!ClaudeConfigManager.isClaudeClientInstalled() && settingsService.state.shouldShowClaudeNotification) {
+145 |             val notification = notificationGroup.createNotification(
+146 |                 "Claude Client is not installed",
+147 |                 NotificationType.INFORMATION
+148 |             )
+149 |             notification.addAction(NotificationAction.createSimpleExpiring("Open Installation Instruction") {
+150 |                 BrowserUtil.open("https://claude.ai/download")
+151 |             })
+152 |             notification.addAction(NotificationAction.createSimpleExpiring("Don't Show Again") {
+153 |                 settingsService.state.shouldShowClaudeNotification = false
+154 |                 notification.expire()
+155 |             })
+156 |             notification.notify(project)
+157 |         }
+158 | 
+159 |         val npxInstalled = isNpxInstalled()
+160 |         if (settingsService.state.shouldShowNodeNotification && !npxInstalled) {
+161 |             val notification = notificationGroup.createNotification(
+162 |                 "Node is not installed",
+163 |                 "MCP Server Proxy requires Node.js to be installed",
+164 |                 NotificationType.INFORMATION
+165 |             )
+166 |             notification.addAction(NotificationAction.createSimpleExpiring("Open Installation Instruction") {
+167 |                 BrowserUtil.open("https://nodejs.org/en/download/package-manager")
+168 |             })
+169 |             notification.addAction(NotificationAction.createSimpleExpiring("Don't Show Again") {
+170 |                 settingsService.state.shouldShowNodeNotification = false
+171 |                 notification.expire()
+172 |             })
+173 |             notification.notify(project)
+174 |         }
+175 | 
+176 |         if (ClaudeConfigManager.isClaudeClientInstalled() && npxInstalled && !ClaudeConfigManager.isProxyConfigured() && settingsService.state.shouldShowClaudeSettingsNotification) {
+177 |             val notification = notificationGroup.createNotification(
+178 |                 "MCP Server Proxy is not configured",
+179 |                 NotificationType.INFORMATION
+180 |             )
+181 |             notification.addAction(NotificationAction.createSimpleExpiring("Install MCP Server Proxy") {
+182 |                 ClaudeConfigManager.modifyClaudeSettings()
+183 |             })
+184 |             notification.addAction(NotificationAction.createSimpleExpiring("Don't Show Again") {
+185 |                 settingsService.state.shouldShowClaudeSettingsNotification = false
+186 |                 notification.expire()
+187 |             })
+188 |             notification.notify(project)
+189 |         }
+190 |     }
+191 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/MCPService.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.ide.mcp
+  2 | 
+  3 | import com.intellij.openapi.components.Service
+  4 | import com.intellij.openapi.components.Service.Level.APP
+  5 | import com.intellij.openapi.components.service
+  6 | import com.intellij.openapi.diagnostic.logger
+  7 | import com.intellij.openapi.project.Project
+  8 | import com.intellij.openapi.util.io.BufferExposingByteArrayOutputStream
+  9 | import io.ktor.client.HttpClient
+ 10 | import io.ktor.client.request.post
+ 11 | import io.ktor.client.request.setBody
+ 12 | import io.ktor.http.ContentType.*
+ 13 | import io.ktor.http.contentType
+ 14 | import io.ktor.util.decodeBase64String
+ 15 | import io.ktor.util.encodeBase64
+ 16 | import io.netty.channel.ChannelHandlerContext
+ 17 | import io.netty.handler.codec.http.FullHttpRequest
+ 18 | import io.netty.handler.codec.http.HttpMethod
+ 19 | import io.netty.handler.codec.http.QueryStringDecoder
+ 20 | import kotlinx.coroutines.CoroutineScope
+ 21 | import kotlinx.coroutines.launch
+ 22 | import kotlinx.serialization.Serializable
+ 23 | import kotlinx.serialization.builtins.ListSerializer
+ 24 | import kotlinx.serialization.json.Json
+ 25 | import kotlinx.serialization.serializer
+ 26 | import okio.ByteString.Companion.decodeBase64
+ 27 | import org.jetbrains.ide.RestService
+ 28 | import org.jetbrains.mcpserverplugin.AbstractMcpTool
+ 29 | import org.jetbrains.mcpserverplugin.McpTool
+ 30 | import org.jetbrains.mcpserverplugin.McpToolManager
+ 31 | import java.nio.charset.StandardCharsets
+ 32 | import kotlin.reflect.KClass
+ 33 | import kotlin.reflect.full.primaryConstructor
+ 34 | import kotlin.reflect.full.starProjectedType
+ 35 | 
+ 36 | @Service
+ 37 | class MCPUsageCollector(private val scope: CoroutineScope) {
+ 38 |     private val url = "aHR0cHM6Ly9lb2VtdGw4NW15dTVtcjAubS5waXBlZHJlYW0ubmV0"
+ 39 |     private val client = HttpClient()
+ 40 | 
+ 41 |     fun sendUsage(toolKey: String) {
+ 42 |         scope.launch {
+ 43 |             try {
+ 44 |                 client.post(url.decodeBase64String()) {
+ 45 |                     contentType(Application.Json)
+ 46 |                     setBody("""{"tool_key": "$toolKey"}""")
+ 47 |                 }
+ 48 |             } catch (e: Throwable) {
+ 49 |                 logger<MCPService>().warn("Failed to sent statistics for tool $toolKey", e)
+ 50 |             }
+ 51 |         }
+ 52 |     }
+ 53 | }
+ 54 | 
+ 55 | class MCPService : RestService() {
+ 56 |     private val serviceName = "mcp"
+ 57 |     private val json = Json {
+ 58 |         prettyPrint = true
+ 59 |         ignoreUnknownKeys = true
+ 60 |         classDiscriminator = "schemaType"
+ 61 |     }
+ 62 | 
+ 63 |     override fun getServiceName(): String = serviceName
+ 64 | 
+ 65 |     override fun execute(urlDecoder: QueryStringDecoder, request: FullHttpRequest, context: ChannelHandlerContext): String? {
+ 66 |         val path = urlDecoder.path().split(serviceName).last().trimStart('/')
+ 67 |         val project = getLastFocusedOrOpenedProject() ?: return null
+ 68 |         val tools = McpToolManager.Companion.getAllTools()
+ 69 | 
+ 70 |         when (path) {
+ 71 |             "list_tools" -> handleListTools(tools, request, context)
+ 72 |             else -> handleToolExecution(path, tools, request, context, project)
+ 73 |         }
+ 74 |         return null
+ 75 |     }
+ 76 | 
+ 77 |     private fun handleListTools(
+ 78 |         tools: List<AbstractMcpTool<*>>,
+ 79 |         request: FullHttpRequest,
+ 80 |         context: ChannelHandlerContext
+ 81 |     ) {
+ 82 |         val toolsList = tools.map { tool ->
+ 83 |             ToolInfo(
+ 84 |                 name = tool.name,
+ 85 |                 description = tool.description,
+ 86 |                 inputSchema = schemaFromDataClass(tool.argKlass)
+ 87 |             )
+ 88 |         }
+ 89 |         sendJson(toolsList, request, context)
+ 90 |     }
+ 91 | 
+ 92 |     private fun handleToolExecution(
+ 93 |         path: String,
+ 94 |         tools: List<AbstractMcpTool<*>>,
+ 95 |         request: FullHttpRequest,
+ 96 |         context: ChannelHandlerContext,
+ 97 |         project: Project
+ 98 |     ) {
+ 99 |         val tool = tools.find { it.name == path } ?: run {
+100 |             sendJson(Response(error = "Unknown tool: $path"), request, context)
+101 |             return
+102 |         }
+103 | 
+104 |         service<MCPUsageCollector>().sendUsage(tool.name)
+105 |         val args = try {
+106 |             parseArgs(request, tool.argKlass)
+107 |         } catch (e: Throwable) {
+108 |             logger<MCPService>().warn("Failed to parse arguments for tool $path", e)
+109 |             sendJson(Response(error = e.message), request, context)
+110 |             return
+111 |         }
+112 |         val result = try {
+113 |             toolHandle(tool, project, args)
+114 |         } catch (e: Throwable) {
+115 |             logger<MCPService>().warn("Failed to execute tool $path", e)
+116 |             Response(error = "Failed to execute tool $path, message ${e.message}")
+117 |         }
+118 |         sendJson(result, request, context)
+119 |     }
+120 | 
+121 |     @Suppress("UNCHECKED_CAST")
+122 |     private fun sendJson(data: Any, request: FullHttpRequest, context: ChannelHandlerContext) {
+123 |         val jsonString = when (data) {
+124 |             is List<*> -> json.encodeToString<List<ToolInfo>>(ListSerializer(ToolInfo.serializer()), data as List<ToolInfo>)
+125 |             is Response -> json.encodeToString<Response>(Response.serializer(), data)
+126 |             else -> throw IllegalArgumentException("Unsupported type for serialization")
+127 |         }
+128 |         val outputStream = BufferExposingByteArrayOutputStream()
+129 |         outputStream.write(jsonString.toByteArray(StandardCharsets.UTF_8))
+130 |         send(outputStream, request, context)
+131 |     }
+132 | 
+133 |     @Suppress("UNCHECKED_CAST")
+134 |     private fun <T : Any> parseArgs(request: FullHttpRequest, klass: KClass<T>): T {
+135 |         val body = request.content().toString(StandardCharsets.UTF_8)
+136 |         if (body.isEmpty()) {
+137 |             return NoArgs as T
+138 |         }
+139 |         return when (klass) {
+140 |             NoArgs::class -> NoArgs as T
+141 |             else -> {
+142 |                 json.decodeFromString(serializer(klass.starProjectedType), body) as T
+143 |             }
+144 |         }
+145 |     }
+146 | 
+147 |     private fun <Args : Any> toolHandle(tool: McpTool<Args>, project: Project, args: Any): Response {
+148 |         @Suppress("UNCHECKED_CAST")
+149 |         return tool.handle(project, args as Args)
+150 |     }
+151 | 
+152 |     override fun isMethodSupported(method: HttpMethod): Boolean =
+153 |         method === HttpMethod.GET || method === HttpMethod.POST
+154 | 
+155 |     private fun schemaFromDataClass(kClass: KClass<*>): JsonSchemaObject {
+156 |         if (kClass == NoArgs::class) return JsonSchemaObject(type = "object")
+157 | 
+158 |         val constructor = kClass.primaryConstructor
+159 |             ?: error("Class ${kClass.simpleName} must have a primary constructor")
+160 | 
+161 |         val properties = constructor.parameters.mapNotNull { param ->
+162 |             param.name?.let { name ->
+163 |                 name to when (param.type.classifier) {
+164 |                     String::class -> PropertySchema("string")
+165 |                     Int::class, Long::class, Double::class, Float::class -> PropertySchema("number")
+166 |                     Boolean::class -> PropertySchema("boolean")
+167 |                     List::class -> PropertySchema("array")
+168 |                     else -> PropertySchema("object")
+169 |                 }
+170 |             }
+171 |         }.toMap()
+172 | 
+173 |         val required = constructor.parameters
+174 |             .filter { !it.type.isMarkedNullable }
+175 |             .mapNotNull { it.name }
+176 | 
+177 |         return JsonSchemaObject(
+178 |             type = "object",
+179 |             properties = properties,
+180 |             required = required
+181 |         )
+182 |     }
+183 | }
+184 | 
+185 | @Serializable
+186 | object NoArgs
+187 | 
+188 | @Serializable
+189 | data class ToolInfo(
+190 |     val name: String,
+191 |     val description: String,
+192 |     val inputSchema: JsonSchemaObject
+193 | )
+194 | 
+195 | @Serializable
+196 | data class Response(
+197 |     val status: String? = null,
+198 |     val error: String? = null
+199 | )
+200 | 
+201 | @Serializable
+202 | data class JsonSchemaObject(
+203 |     val type: String,
+204 |     val properties: Map<String, PropertySchema> = emptyMap(),
+205 |     val required: List<String> = emptyList(),
+206 |     val items: PropertySchema? = null
+207 | )
+208 | 
+209 | @Serializable
+210 | data class PropertySchema(
+211 |     val type: String
+212 | )
+213 | 
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/McpTool.kt:
+--------------------------------------------------------------------------------
+ 1 | package org.jetbrains.mcpserverplugin
+ 2 | 
+ 3 | import com.intellij.openapi.project.Project
+ 4 | import org.jetbrains.ide.mcp.Response
+ 5 | import kotlin.reflect.KClass
+ 6 | 
+ 7 | interface McpTool<Args : Any> {
+ 8 |     val name: String
+ 9 |     val description: String
+10 |     fun handle(project: Project, args: Args): Response
+11 | }
+12 | 
+13 | abstract class AbstractMcpTool<Args : Any> : McpTool<Args> {
+14 |     val argKlass: KClass<Args> by lazy {
+15 |         val supertype = this::class.supertypes.find {
+16 |             it.classifier == AbstractMcpTool::class
+17 |         } ?: error("Cannot find McpTool supertype")
+18 | 
+19 |         val typeArgument = supertype.arguments.first().type
+20 |             ?: error("Cannot find type argument for McpTool")
+21 | 
+22 |         @Suppress("UNCHECKED_CAST")
+23 |         typeArgument.classifier as KClass<Args>
+24 |     }
+25 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/McpToolManager.kt:
+--------------------------------------------------------------------------------
+ 1 | package org.jetbrains.mcpserverplugin
+ 2 | 
+ 3 | import com.intellij.openapi.extensions.ExtensionPointName
+ 4 | import org.jetbrains.mcpserverplugin.git.GetVcsStatusTool
+ 5 | 
+ 6 | class McpToolManager {
+ 7 |     companion object {
+ 8 |         private val EP_NAME = ExtensionPointName<AbstractMcpTool<*>>("com.intellij.mcpServer.mcpTool")
+ 9 | 
+10 |         fun getAllTools(): List<AbstractMcpTool<*>> {
+11 |             return buildList {
+12 |                 // Add built-in tools
+13 |                 addAll(getBuiltInTools())
+14 |                 // Add extension-provided tools
+15 |                 addAll(EP_NAME.extensionList)
+16 |             }
+17 |         }
+18 | 
+19 |         private fun getBuiltInTools(): List<AbstractMcpTool<*>> = listOf(
+20 |             GetCurrentFileTextTool(),
+21 |             GetCurrentFilePathTool(),
+22 |             GetSelectedTextTool(),
+23 |             ReplaceSelectedTextTool(),
+24 |             ReplaceCurrentFileTextTool(),
+25 |             CreateNewFileWithTextTool(),
+26 |             FindFilesByNameSubstring(),
+27 |             GetFileTextByPathTool(),
+28 |             GetVcsStatusTool(),
+29 |             ToggleBreakpointTool(),
+30 |             GetBreakpointsTool(),
+31 |             ReplaceTextByPathTool(),
+32 |             ListFilesInFolderTool(),
+33 |             SearchInFilesContentTool(),
+34 |             RunConfigurationTool(),
+35 |             GetRunConfigurationsTool(),
+36 |             GetProjectModulesTool(),
+37 |             GetProjectDependenciesTool(),
+38 |             GetAllOpenFileTextsTool(),
+39 |             GetAllOpenFilePathsTool(),
+40 |             OpenFileInEditorTool(),
+41 |             ListAvailableActionsTool(),
+42 |             ExecuteActionByIdTool(),
+43 |             GetProgressIndicatorsTool(),
+44 |             WaitTool(),
+45 |         )
+46 |     }
+47 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/builtinTools.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.mcpserverplugin
+  2 | 
+  3 | import com.intellij.execution.ProgramRunnerUtil.executeConfiguration
+  4 | import com.intellij.execution.RunManager
+  5 | import com.intellij.execution.executors.DefaultRunExecutor.getRunExecutorInstance
+  6 | import com.intellij.find.FindManager
+  7 | import com.intellij.find.impl.FindInProjectUtil
+  8 | import com.intellij.ide.DataManager
+  9 | import com.intellij.openapi.actionSystem.ActionManager
+ 10 | import com.intellij.openapi.actionSystem.AnActionEvent
+ 11 | import com.intellij.openapi.actionSystem.ex.ActionManagerEx
+ 12 | import com.intellij.openapi.application.ApplicationManager
+ 13 | import com.intellij.openapi.application.ModalityState
+ 14 | import com.intellij.openapi.application.invokeLater
+ 15 | import com.intellij.openapi.application.runInEdt
+ 16 | import com.intellij.openapi.application.runReadAction
+ 17 | import com.intellij.openapi.command.WriteCommandAction
+ 18 | import com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction
+ 19 | import com.intellij.openapi.editor.Document
+ 20 | import com.intellij.openapi.fileEditor.FileDocumentManager
+ 21 | import com.intellij.openapi.fileEditor.FileEditorManager
+ 22 | import com.intellij.openapi.fileEditor.FileEditorManager.getInstance
+ 23 | import com.intellij.openapi.progress.impl.CoreProgressManager
+ 24 | import com.intellij.openapi.project.Project
+ 25 | import com.intellij.openapi.project.guessProjectDir
+ 26 | import com.intellij.openapi.roots.OrderEnumerator
+ 27 | import com.intellij.openapi.vfs.LocalFileSystem
+ 28 | import com.intellij.openapi.vfs.VirtualFile
+ 29 | import com.intellij.openapi.vfs.readText
+ 30 | import com.intellij.openapi.vfs.toNioPathOrNull
+ 31 | import com.intellij.psi.PsiDocumentManager
+ 32 | import com.intellij.psi.search.FilenameIndex
+ 33 | import com.intellij.psi.search.GlobalSearchScope
+ 34 | import com.intellij.usageView.UsageInfo
+ 35 | import com.intellij.usages.FindUsagesProcessPresentation
+ 36 | import com.intellij.usages.UsageViewPresentation
+ 37 | import com.intellij.util.Processor
+ 38 | import com.intellij.util.application
+ 39 | import com.intellij.util.io.createParentDirectories
+ 40 | import kotlinx.serialization.Serializable
+ 41 | import org.apache.commons.compress.utils.TimeUtils
+ 42 | import org.jetbrains.ide.mcp.NoArgs
+ 43 | import org.jetbrains.ide.mcp.Response
+ 44 | import java.nio.file.Path
+ 45 | import java.util.concurrent.CountDownLatch
+ 46 | import java.util.concurrent.TimeUnit
+ 47 | import kotlin.io.path.*
+ 48 | 
+ 49 | fun Path.resolveRel(pathInProject: String): Path {
+ 50 |     return when (pathInProject) {
+ 51 |         "/" -> this
+ 52 |         else -> resolve(pathInProject.removePrefix("/"))
+ 53 |     }
+ 54 | }
+ 55 | 
+ 56 | fun Path.relativizeByProjectDir(projDir: Path?): String =
+ 57 |     projDir?.relativize(this)?.pathString ?: this.absolutePathString()
+ 58 | 
+ 59 | class GetCurrentFileTextTool : AbstractMcpTool<NoArgs>() {
+ 60 |     override val name: String = "get_open_in_editor_file_text"
+ 61 |     override val description: String = """
+ 62 |         Retrieves the complete text content of the currently active file in the JetBrains IDE editor.
+ 63 |         Use this tool to access and analyze the file's contents for tasks such as code review, content inspection, or text processing.
+ 64 |         Returns empty string if no file is currently open.
+ 65 |     """.trimIndent()
+ 66 | 
+ 67 |     override fun handle(project: Project, args: NoArgs): Response {
+ 68 |         val text = runReadAction<String?> {
+ 69 |             getInstance(project).selectedTextEditor?.document?.text
+ 70 |         }
+ 71 |         return Response(text ?: "")
+ 72 |     }
+ 73 | }
+ 74 | 
+ 75 | class GetCurrentFilePathTool : AbstractMcpTool<NoArgs>() {
+ 76 |     override val name: String = "get_open_in_editor_file_path"
+ 77 |     override val description: String = """
+ 78 |         Retrieves the absolute path of the currently active file in the JetBrains IDE editor.
+ 79 |         Use this tool to get the file location for tasks requiring file path information.
+ 80 |         Returns an empty string if no file is currently open.
+ 81 |     """.trimIndent()
+ 82 | 
+ 83 |     override fun handle(project: Project, args: NoArgs): Response {
+ 84 |         val path = runReadAction<String?> {
+ 85 |             getInstance(project).selectedTextEditor?.virtualFile?.path
+ 86 |         }
+ 87 |         return Response(path ?: "")
+ 88 |     }
+ 89 | }
+ 90 | 
+ 91 | class GetAllOpenFileTextsTool : AbstractMcpTool<NoArgs>() {
+ 92 |     override val name: String = "get_all_open_file_texts"
+ 93 |     override val description: String = """
+ 94 |         Returns text of all currently open files in the JetBrains IDE editor.
+ 95 |         Returns an empty list if no files are open.
+ 96 |         
+ 97 |         Use this tool to explore current open editors.
+ 98 |         Returns a JSON array of objects containing file information:
+ 99 |             - path: Path relative to project root
+100 |             - text: File text
+101 |     """.trimIndent()
+102 | 
+103 |     override fun handle(project: Project, args: NoArgs): Response {
+104 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+105 | 
+106 |         val fileEditorManager = FileEditorManager.getInstance(project)
+107 |         val openFiles = fileEditorManager.openFiles
+108 |         val filePaths = openFiles.mapNotNull { """{"path": "${it.toNioPath().relativizeByProjectDir(projectDir)}", "text": "${it.readText()}", """ }
+109 |         return Response(filePaths.joinToString(",\n", prefix = "[", postfix = "]"))
+110 |     }
+111 | }
+112 | 
+113 | class GetAllOpenFilePathsTool : AbstractMcpTool<NoArgs>() {
+114 |     override val name: String = "get_all_open_file_paths"
+115 |     override val description: String = """
+116 |         Lists full path relative paths to project root of all currently open files in the JetBrains IDE editor.
+117 |         Returns a list of file paths that are currently open in editor tabs.
+118 |         Returns an empty list if no files are open.
+119 |         
+120 |         Use this tool to explore current open editors.
+121 |         Returns a list of file paths separated by newline symbol.
+122 |     """.trimIndent()
+123 | 
+124 |     override fun handle(project: Project, args: NoArgs): Response {
+125 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+126 | 
+127 |         val fileEditorManager = FileEditorManager.getInstance(project)
+128 |         val openFiles = fileEditorManager.openFiles
+129 |         val filePaths = openFiles.mapNotNull { it.toNioPath().relativizeByProjectDir(projectDir) }
+130 |         return Response(filePaths.joinToString("\n"))
+131 |     }
+132 | }
+133 | 
+134 | @Serializable
+135 | data class OpenFileInEditorArgs(val filePath: String)
+136 | 
+137 | class OpenFileInEditorTool : AbstractMcpTool<OpenFileInEditorArgs>() {
+138 |     override val name: String = "open_file_in_editor"
+139 |     override val description: String = """
+140 |         Opens the specified file in the JetBrains IDE editor.
+141 |         Requires a filePath parameter containing the path to the file to open.
+142 |         Requires two parameters:
+143 |             - filePath: The path of file to open can be absolute or relative to the project root.
+144 |             - text: The content to write into the new file
+145 |         Returns one of two possible responses:
+146 |             - "file is opened" if the file was successfully created and populated
+147 |             - "file doesn't exist or can't be opened" otherwise
+148 |     """.trimIndent()
+149 | 
+150 |     override fun handle(project: Project, args: OpenFileInEditorArgs): Response {
+151 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+152 |             ?: return Response(error = "can't find project dir")
+153 | 
+154 |         val file = LocalFileSystem.getInstance().findFileByPath(args.filePath)
+155 |             ?: LocalFileSystem.getInstance().refreshAndFindFileByNioFile(projectDir.resolveRel(args.filePath))
+156 | 
+157 |         return if (file != null && file.exists()) {
+158 |             invokeLater {
+159 |                 FileEditorManager.getInstance(project).openFile(file, true)
+160 |             }
+161 |             Response("file is opened")
+162 |         } else {
+163 |             Response("file doesn't exist or can't be opened")
+164 |         }
+165 |     }
+166 | }
+167 | class GetSelectedTextTool : AbstractMcpTool<NoArgs>() {
+168 |     override val name: String = "get_selected_in_editor_text"
+169 |     override val description: String = """
+170 |         Retrieves the currently selected text from the active editor in JetBrains IDE.
+171 |         Use this tool when you need to access and analyze text that has been highlighted/selected by the user.
+172 |         Returns an empty string if no text is selected or no editor is open.
+173 |     """
+174 | 
+175 |     override fun handle(project: Project, args: NoArgs): Response {
+176 |         val text = runReadAction<String?> {
+177 |             getInstance(project).selectedTextEditor?.selectionModel?.selectedText
+178 |         }
+179 |         return Response(text ?: "")
+180 |     }
+181 | }
+182 | 
+183 | @Serializable
+184 | data class ReplaceSelectedTextArgs(val text: String)
+185 | 
+186 | class ReplaceSelectedTextTool : AbstractMcpTool<ReplaceSelectedTextArgs>() {
+187 |     override val name: String = "replace_selected_text"
+188 |     override val description: String = """
+189 |         Replaces the currently selected text in the active editor with specified new text.
+190 |         Use this tool to modify code or content by replacing the user's text selection.
+191 |         Requires a text parameter containing the replacement content.
+192 |         Returns one of three possible responses:
+193 |             - "ok" if the text was successfully replaced
+194 |             - "no text selected" if no text is selected or no editor is open
+195 |             - "unknown error" if the operation fails
+196 |     """.trimIndent()
+197 | 
+198 |     override fun handle(project: Project, args: ReplaceSelectedTextArgs): Response {
+199 |         var response: Response? = null
+200 | 
+201 |         application.invokeAndWait {
+202 |             runWriteCommandAction(project, "Replace Selected Text", null, {
+203 |                 val editor = getInstance(project).selectedTextEditor
+204 |                 val document = editor?.document
+205 |                 val selectionModel = editor?.selectionModel
+206 |                 if (document != null && selectionModel != null && selectionModel.hasSelection()) {
+207 |                     document.replaceString(selectionModel.selectionStart, selectionModel.selectionEnd, args.text)
+208 |                     PsiDocumentManager.getInstance(project).commitDocument(document)
+209 |                     response = Response("ok")
+210 |                 } else {
+211 |                     response = Response(error = "no text selected")
+212 |                 }
+213 |             })
+214 |         }
+215 | 
+216 |         return response ?: Response(error = "unknown error")
+217 |     }}
+218 | 
+219 | @Serializable
+220 | data class ReplaceCurrentFileTextArgs(val text: String)
+221 | 
+222 | class ReplaceCurrentFileTextTool : AbstractMcpTool<ReplaceCurrentFileTextArgs>() {
+223 |     override val name: String = "replace_current_file_text"
+224 |     override val description: String = """
+225 |         Replaces the entire content of the currently active file in the JetBrains IDE with specified new text.
+226 |         Use this tool when you need to completely overwrite the current file's content.
+227 |         Requires a text parameter containing the new content.
+228 |         Returns one of three possible responses:
+229 |         - "ok" if the file content was successfully replaced
+230 |         - "no file open" if no editor is active
+231 |         - "unknown error" if the operation fails
+232 |     """
+233 | 
+234 |     override fun handle(project: Project, args: ReplaceCurrentFileTextArgs): Response {
+235 |         var response: Response? = null
+236 |         application.invokeAndWait {
+237 |             runWriteCommandAction(project, "Replace File Text", null, {
+238 |                 val editor = getInstance(project).selectedTextEditor
+239 |                 val document = editor?.document
+240 |                 if (document != null) {
+241 |                     document.setText(args.text)
+242 |                     response = Response("ok")
+243 |                 } else {
+244 |                     response = Response(error = "no file open")
+245 |                 }
+246 |             })
+247 |         }
+248 |         return response ?: Response(error = "unknown error")
+249 |     }
+250 | }
+251 | 
+252 | @Serializable
+253 | data class CreateNewFileWithTextArgs(val pathInProject: String, val text: String)
+254 | 
+255 | class CreateNewFileWithTextTool : AbstractMcpTool<CreateNewFileWithTextArgs>() {
+256 |     override val name: String = "create_new_file_with_text"
+257 |     override val description: String = """
+258 |         Creates a new file at the specified path within the project directory and populates it with the provided text.
+259 |         Use this tool to generate new files in your project structure.
+260 |         Requires two parameters:
+261 |             - pathInProject: The relative path where the file should be created
+262 |             - text: The content to write into the new file
+263 |         Returns one of two possible responses:
+264 |             - "ok" if the file was successfully created and populated
+265 |             - "can't find project dir" if the project directory cannot be determined
+266 |         Note: Creates any necessary parent directories automatically
+267 |     """
+268 | 
+269 |     override fun handle(project: Project, args: CreateNewFileWithTextArgs): Response {
+270 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+271 |             ?: return Response(error = "can't find project dir")
+272 | 
+273 |         val path = projectDir.resolveRel(args.pathInProject)
+274 |         if (!path.exists()) {
+275 |             path.createParentDirectories().createFile()
+276 |         }
+277 |         val text = args.text
+278 |         path.writeText(text.unescape())
+279 |         LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)
+280 | 
+281 |         return Response("ok")
+282 |     }
+283 | }
+284 | 
+285 | private fun String.unescape(): String = removePrefix("<![CDATA[").removeSuffix("]]>")
+286 | 
+287 | @Serializable
+288 | data class Query(val nameSubstring: String)
+289 | 
+290 | class FindFilesByNameSubstring : AbstractMcpTool<Query>() {
+291 |     override val name: String = "find_files_by_name_substring"
+292 |     override val description: String = """
+293 |         Searches for all files in the project whose names contain the specified substring (case-insensitive).
+294 |         Use this tool to locate files when you know part of the filename.
+295 |         Requires a nameSubstring parameter for the search term.
+296 |         Returns a JSON array of objects containing file information:
+297 |         - path: Path relative to project root
+298 |         - name: File name
+299 |         Returns an empty array ([]) if no matching files are found.
+300 |         Note: Only searches through files within the project directory, excluding libraries and external dependencies.
+301 |     """
+302 | 
+303 |     override fun handle(project: Project, args: Query): Response {
+304 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+305 |             ?: return Response(error = "project dir not found")
+306 | 
+307 |         val searchSubstring = args.nameSubstring.toLowerCase()
+308 |         return runReadAction {
+309 |             Response(
+310 |                 FilenameIndex.getAllFilenames(project)
+311 |                     .filter { it.toLowerCase().contains(searchSubstring) }
+312 |                     .flatMap {
+313 |                         FilenameIndex.getVirtualFilesByName(it, GlobalSearchScope.projectScope(project))
+314 |                     }
+315 |                     .filter { file ->
+316 |                         try {
+317 |                             projectDir.relativize(Path(file.path))
+318 |                             true
+319 |                         } catch (e: IllegalArgumentException) {
+320 |                             false
+321 |                         }
+322 |                     }
+323 |                     .map { file ->
+324 |                         val relativePath = projectDir.relativize(Path(file.path)).toString()
+325 |                         """{"path": "$relativePath", "name": "${file.name}"}"""
+326 |                     }
+327 |                     .joinToString(",\n", prefix = "[", postfix = "]")
+328 |             )
+329 |         }
+330 |     }
+331 | }
+332 | 
+333 | 
+334 | @Serializable
+335 | data class PathInProject(val pathInProject: String)
+336 | 
+337 | class GetFileTextByPathTool : AbstractMcpTool<PathInProject>() {
+338 |     override val name: String = "get_file_text_by_path"
+339 |     override val description: String = """
+340 |         Retrieves the text content of a file using its path relative to project root.
+341 |         Use this tool to read file contents when you have the file's project-relative path.
+342 |         Requires a pathInProject parameter specifying the file location from project root.
+343 |         Returns one of these responses:
+344 |         - The file's content if the file exists and belongs to the project
+345 |         - error "project dir not found" if project directory cannot be determined
+346 |         - error "file not found" if the file doesn't exist or is outside project scope
+347 |         Note: Automatically refreshes the file system before reading
+348 |     """
+349 | 
+350 |     override fun handle(project: Project, args: PathInProject): Response {
+351 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+352 |             ?: return Response(error = "project dir not found")
+353 | 
+354 |         val text = runReadAction {
+355 |             val file = LocalFileSystem.getInstance()
+356 |                 .refreshAndFindFileByNioFile(projectDir.resolveRel(args.pathInProject))
+357 |                 ?: return@runReadAction Response(error = "file not found")
+358 | 
+359 |             if (GlobalSearchScope.allScope(project).contains(file)) {
+360 |                 Response(file.readText())
+361 |             } else {
+362 |                 Response(error = "file not found")
+363 |             }
+364 |         }
+365 |         return text
+366 |     }
+367 | }
+368 | 
+369 | 
+370 | @Serializable
+371 | data class ReplaceTextByPathToolArgs(val pathInProject: String, val text: String)
+372 | 
+373 | class ReplaceTextByPathTool : AbstractMcpTool<ReplaceTextByPathToolArgs>() {
+374 |     override val name: String = "replace_file_text_by_path"
+375 |     override val description: String = """
+376 |         Replaces the entire content of a specified file with new text, if the file is within the project.
+377 |         Use this tool to modify file contents using a path relative to the project root.
+378 |         Requires two parameters:
+379 |         - pathInProject: The path to the target file, relative to project root
+380 |         - text: The new content to write to the file
+381 |         Returns one of these responses:
+382 |         - "ok" if the file was successfully updated
+383 |         - error "project dir not found" if project directory cannot be determined
+384 |         - error "file not found" if the file doesn't exist
+385 |         - error "could not get document" if the file content cannot be accessed
+386 |         Note: Automatically saves the file after modification
+387 |     """
+388 | 
+389 |     override fun handle(project: Project, args: ReplaceTextByPathToolArgs): Response {
+390 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+391 |             ?: return Response(error = "project dir not found")
+392 | 
+393 |         var document: Document? = null
+394 | 
+395 |         val readResult = runReadAction {
+396 |             var file: VirtualFile = LocalFileSystem.getInstance()
+397 |                 .refreshAndFindFileByNioFile(projectDir.resolveRel(args.pathInProject))
+398 |                 ?: return@runReadAction "file not found"
+399 | 
+400 |             if (!GlobalSearchScope.allScope(project).contains(file)) {
+401 |                 return@runReadAction "file not found"
+402 |             }
+403 | 
+404 |             document = FileDocumentManager.getInstance().getDocument(file)
+405 |             if (document == null) {
+406 |                 return@runReadAction "could not get document"
+407 |             }
+408 | 
+409 |             return@runReadAction "ok"
+410 |         }
+411 | 
+412 |         if (readResult != "ok") {
+413 |             return Response(error = readResult)
+414 |         }
+415 | 
+416 |         WriteCommandAction.runWriteCommandAction(project) {
+417 |             document!!.setText(args.text)
+418 |             FileDocumentManager.getInstance().saveDocument(document!!)
+419 |         }
+420 | 
+421 |         return Response("ok")
+422 |     }
+423 | }
+424 | 
+425 | 
+426 | @Serializable
+427 | data class ListFilesInFolderArgs(val pathInProject: String)
+428 | 
+429 | class ListFilesInFolderTool : AbstractMcpTool<ListFilesInFolderArgs>() {
+430 |     override val name: String = "list_files_in_folder"
+431 |     override val description: String = """
+432 |         Lists all files and directories in the specified project folder.
+433 |         Use this tool to explore project structure and get contents of any directory.
+434 |         Requires a pathInProject parameter (use "/" for project root).
+435 |         Returns a JSON-formatted list of entries, where each entry contains:
+436 |         - name: The name of the file or directory
+437 |         - type: Either "file" or "directory"
+438 |         - path: Full path relative to project root
+439 |         Returns error if the specified path doesn't exist or is outside project scope.
+440 |     """.trimIndent()
+441 | 
+442 |     override fun handle(project: Project, args: ListFilesInFolderArgs): Response {
+443 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+444 |             ?: return Response(error = "can't find project dir")
+445 | 
+446 |         return runReadAction {
+447 |             try {
+448 |                 val targetDir = projectDir.resolveRel(args.pathInProject)
+449 | 
+450 |                 if (!targetDir.exists()) {
+451 |                     return@runReadAction Response(error = "directory not found")
+452 |                 }
+453 | 
+454 |                 val entries = targetDir.listDirectoryEntries().map { entry ->
+455 |                     val type = if (entry.isDirectory()) "directory" else "file"
+456 |                     val relativePath = projectDir.relativize(entry).toString()
+457 |                     """{"name": "${entry.name}", "type": "$type", "path": "$relativePath"}"""
+458 |                 }
+459 | 
+460 |                 Response(entries.joinToString(",\n", prefix = "[", postfix = "]"))
+461 |             } catch (e: Exception) {
+462 |                 Response(error = "Error listing directory: ${e.message}")
+463 |             }
+464 |         }
+465 |     }
+466 | }
+467 | 
+468 | @Serializable
+469 | data class SearchInFilesArgs(val searchText: String)
+470 | 
+471 | class SearchInFilesContentTool : AbstractMcpTool<SearchInFilesArgs>() {
+472 |     override val name: String = "search_in_files_content"
+473 |     override val description: String = """
+474 |         Searches for a text substring within all files in the project using IntelliJ's search engine.
+475 |         Use this tool to find files containing specific text content.
+476 |         Requires a searchText parameter specifying the text to find.
+477 |         Returns a JSON array of objects containing file information:
+478 |         - path: Path relative to project root
+479 |         Returns an empty array ([]) if no matches are found.
+480 |         Note: Only searches through text files within the project directory.
+481 |     """
+482 | 
+483 |     override fun handle(project: Project, args: SearchInFilesArgs): Response {
+484 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+485 |             ?: return Response(error = "Project directory not found")
+486 | 
+487 |         val searchSubstring = args.searchText
+488 |         if (searchSubstring.isNullOrBlank()) {
+489 |             return Response(error = "contentSubstring parameter is required and cannot be blank")
+490 |         }
+491 | 
+492 |         val findModel = FindManager.getInstance(project).findInProjectModel.clone()
+493 |         findModel.stringToFind = searchSubstring
+494 |         findModel.isCaseSensitive = false
+495 |         findModel.isWholeWordsOnly = false
+496 |         findModel.isRegularExpressions = false
+497 |         findModel.setProjectScope(true)
+498 | 
+499 |         val results = mutableSetOf<String>()
+500 | 
+501 |         val processor = Processor<UsageInfo> { usageInfo ->
+502 |             val virtualFile = usageInfo.virtualFile ?: return@Processor true
+503 |             try {
+504 |                 val relativePath = projectDir.relativize(Path(virtualFile.path)).toString()
+505 |                 results.add("""{"path": "$relativePath", "name": "${virtualFile.name}"}""")
+506 |             } catch (e: IllegalArgumentException) {
+507 |             }
+508 |             true
+509 |         }
+510 |         FindInProjectUtil.findUsages(
+511 |             findModel,
+512 |             project,
+513 |             processor,
+514 |             FindUsagesProcessPresentation(UsageViewPresentation())
+515 |         )
+516 | 
+517 |         val jsonResult = results.joinToString(",\n", prefix = "[", postfix = "]")
+518 |         return Response(jsonResult)
+519 |     }
+520 | }
+521 | 
+522 | class GetRunConfigurationsTool : AbstractMcpTool<NoArgs>() {
+523 |     override val name: String
+524 |         get() = "get_run_configurations"
+525 |     override val description: String
+526 |         get() = "Returns a list of run configurations for the current project. " +
+527 |                 "Use this tool to query the list of available run configurations in current project." +
+528 |                 "Then you shall to call \"run_configuration\" tool if you find anything relevant." +
+529 |                 "Returns JSON list of run configuration names. Empty list if no run configurations found."
+530 | 
+531 |     override fun handle(project: Project, args: NoArgs): Response {
+532 |         val runManager = RunManager.getInstance(project)
+533 | 
+534 |         val configurations = runManager.allSettings.map { it.name }.joinToString(
+535 |             prefix = "[",
+536 |             postfix = "]",
+537 |             separator = ","
+538 |         ) { "\"$it\"" }
+539 | 
+540 |         return Response(configurations)
+541 |     }
+542 | }
+543 | 
+544 | @Serializable
+545 | data class RunConfigArgs(val configName: String)
+546 | 
+547 | class RunConfigurationTool : AbstractMcpTool<RunConfigArgs>() {
+548 |     override val name: String = "run_configuration"
+549 |     override val description: String = "Run a specific run configuration in the current project. " +
+550 |             "Use this tool to run a run configuration that you have found from \"get_run_configurations\" tool." +
+551 |             "Returns one of two possible responses: " +
+552 |             " - \"ok\" if the run configuration was successfully executed " +
+553 |             " - \"error <error message>\" if the run configuration was not found or failed to execute"
+554 | 
+555 |     override fun handle(project: Project, args: RunConfigArgs): Response {
+556 |         val runManager = RunManager.getInstance(project)
+557 |         val settings = runManager.allSettings.find { it.name == args.configName }
+558 |         val executor = getRunExecutorInstance()
+559 |         if (settings != null) {
+560 |             executeConfiguration(settings, executor)
+561 |         } else {
+562 |             println("Run configuration with name '${args.configName}' not found.")
+563 |         }
+564 |         return Response("ok")
+565 |     }
+566 | }
+567 | 
+568 | class GetProjectModulesTool : AbstractMcpTool<NoArgs>() {
+569 |     override val name: String = "get_project_modules"
+570 |     override val description: String = "Get list of all modules in the project with their dependencies. Returns JSON list of module names."
+571 | 
+572 |     override fun handle(project: Project, args: NoArgs): Response {
+573 |         val moduleManager = com.intellij.openapi.module.ModuleManager.getInstance(project)
+574 |         val modules = moduleManager.modules.map { it.name }
+575 |         return Response(modules.joinToString(",\n", prefix = "[", postfix = "]"))
+576 |     }
+577 | }
+578 | 
+579 | class GetProjectDependenciesTool : AbstractMcpTool<NoArgs>() {
+580 |     override val name: String = "get_project_dependencies"
+581 |     override val description: String = "Get list of all dependencies defined in the project. Returns JSON list of dependency names."
+582 | 
+583 |     override fun handle(project: Project, args: NoArgs): Response {
+584 |         val moduleManager = com.intellij.openapi.module.ModuleManager.getInstance(project)
+585 |         val dependencies = moduleManager.modules.flatMap { module ->
+586 |             OrderEnumerator.orderEntries(module).librariesOnly().classes().roots.map { root ->
+587 |                 """{"name": "${root.name}", "type": "library"}"""
+588 |             }
+589 |         }.toHashSet()
+590 | 
+591 |         return Response(dependencies.joinToString(",\n", prefix = "[", postfix = "]"))
+592 |     }
+593 | }
+594 | 
+595 | class ListAvailableActionsTool : AbstractMcpTool<NoArgs>() {
+596 |     override val name: String = "list_available_actions"
+597 |     override val description: String = """
+598 |         Lists all available actions in JetBrains IDE editor.
+599 |         Returns a JSON array of objects containing action information:
+600 |         - id: The action ID
+601 |         - text: The action presentation text
+602 |         Use this tool to discover available actions for execution with execute_action_by_id.
+603 |     """.trimIndent()
+604 | 
+605 |     override fun handle(project: Project, args: NoArgs): Response {
+606 |         val actionManager = ActionManager.getInstance() as ActionManagerEx
+607 |         val dataContext = DataManager.getInstance().getDataContext()
+608 | 
+609 |         val availableActions = runReadAction {
+610 |             // Get all action IDs
+611 |             actionManager.getActionIdList("").mapNotNull { actionId ->
+612 |                 val action = actionManager.getAction(actionId) ?: return@mapNotNull null
+613 | 
+614 |                 // Create event and presentation to check if action is enabled
+615 |                 val event = AnActionEvent.createFromAnAction(action, null, "", dataContext)
+616 |                 val presentation = action.templatePresentation.clone()
+617 | 
+618 |                 // Update presentation to check if action is available
+619 |                 action.update(event)
+620 | 
+621 |                 // Only include actions that have text and are enabled
+622 |                 if (event.presentation.isEnabledAndVisible && !presentation.text.isNullOrBlank()) {
+623 |                     """{"id": "$actionId", "text": "${presentation.text.replace("\"", "\\\"")}"}"""
+624 |                 } else {
+625 |                     null
+626 |                 }
+627 |             }
+628 |         }
+629 | 
+630 |         return Response(availableActions.joinToString(",\n", prefix = "[", postfix = "]"))
+631 |     }
+632 | }
+633 | 
+634 | @Serializable
+635 | data class ExecuteActionArgs(val actionId: String)
+636 | 
+637 | class ExecuteActionByIdTool : AbstractMcpTool<ExecuteActionArgs>() {
+638 |     override val name: String = "execute_action_by_id"
+639 |     override val description: String = """
+640 |         Executes an action by its ID in JetBrains IDE editor.
+641 |         Requires an actionId parameter containing the ID of the action to execute.
+642 |         Returns one of two possible responses:
+643 |         - "ok" if the action was successfully executed
+644 |         - "action not found" if the action with the specified ID was not found
+645 |         Note: This tool doesn't wait for the action to complete.
+646 |     """.trimIndent()
+647 | 
+648 |     override fun handle(project: Project, args: ExecuteActionArgs): Response {
+649 |         val actionManager = ActionManager.getInstance()
+650 |         val action = actionManager.getAction(args.actionId)
+651 | 
+652 |         if (action == null) {
+653 |             return Response(error = "action not found")
+654 |         }
+655 | 
+656 |         ApplicationManager.getApplication().invokeLater({
+657 |             val event = AnActionEvent.createFromAnAction(
+658 |                 action,
+659 |                 null,
+660 |                 "",
+661 |                 DataManager.getInstance().getDataContext()
+662 |             )
+663 |             action.actionPerformed(event)
+664 |         }, ModalityState.nonModal())
+665 | 
+666 |         return Response("ok")
+667 |     }
+668 | }
+669 | 
+670 | class GetProgressIndicatorsTool : AbstractMcpTool<NoArgs>() {
+671 |     override val name: String = "get_progress_indicators"
+672 |     override val description: String = """
+673 |         Retrieves the status of all running progress indicators in JetBrains IDE editor.
+674 |         Returns a JSON array of objects containing progress information:
+675 |         - text: The progress text/description
+676 |         - fraction: The progress ratio (0.0 to 1.0)
+677 |         - indeterminate: Whether the progress is indeterminate
+678 |         Returns an empty array if no progress indicators are running.
+679 |     """.trimIndent()
+680 | 
+681 |     override fun handle(project: Project, args: NoArgs): Response {
+682 |         val runningIndicators = CoreProgressManager.getCurrentIndicators()
+683 | 
+684 |         val progressInfos = runningIndicators.map { indicator ->
+685 |             val text = indicator.text ?: ""
+686 |             val fraction = if (indicator.isIndeterminate) -1.0 else indicator.fraction
+687 |             val indeterminate = indicator.isIndeterminate
+688 | 
+689 |             """{"text": "${text.replace("\"", "\\\"")}", "fraction": $fraction, "indeterminate": $indeterminate}"""
+690 |         }
+691 | 
+692 |         return Response(progressInfos.joinToString(",\n", prefix = "[", postfix = "]"))
+693 |     }
+694 | }
+695 | 
+696 | @Serializable
+697 | data class WaitArgs(val milliseconds: Long = 5000)
+698 | 
+699 | class WaitTool : AbstractMcpTool<WaitArgs>() {
+700 |     override val name: String = "wait"
+701 |     override val description: String = """
+702 |         Waits for a specified number of milliseconds (default: 5000ms = 5 seconds).
+703 |         Optionally accepts a milliseconds parameter to specify the wait duration.
+704 |         Returns "ok" after the wait completes.
+705 |         Use this tool when you need to pause before executing the next command.
+706 |     """.trimIndent()
+707 | 
+708 |     override fun handle(project: Project, args: WaitArgs): Response {
+709 |         val waitTime = if (args.milliseconds <= 0) 5000 else args.milliseconds
+710 | 
+711 |         try {
+712 |             TimeUnit.MILLISECONDS.sleep(waitTime)
+713 |         } catch (e: InterruptedException) {
+714 |             Thread.currentThread().interrupt()
+715 |             return Response(error = "Wait interrupted")
+716 |         }
+717 | 
+718 |         return Response("ok")
+719 |     }
+720 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/debuggerTools.kt:
+--------------------------------------------------------------------------------
+ 1 | package org.jetbrains.mcpserverplugin
+ 2 | 
+ 3 | import com.intellij.openapi.application.invokeLater
+ 4 | import com.intellij.openapi.application.runWriteAction
+ 5 | import com.intellij.openapi.project.Project
+ 6 | import com.intellij.openapi.project.guessProjectDir
+ 7 | import com.intellij.openapi.vfs.LocalFileSystem
+ 8 | import com.intellij.openapi.vfs.toNioPathOrNull
+ 9 | import com.intellij.xdebugger.XDebuggerManager
+10 | import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+11 | import com.intellij.xdebugger.impl.XSourcePositionImpl
+12 | import com.intellij.xdebugger.impl.breakpoints.XBreakpointUtil
+13 | import kotlinx.serialization.Serializable
+14 | import org.jetbrains.ide.mcp.NoArgs
+15 | import org.jetbrains.ide.mcp.Response
+16 | 
+17 | @Serializable
+18 | data class ToggleBreakpointArgs(val filePathInProject: String, val line: Int)
+19 | class ToggleBreakpointTool : AbstractMcpTool<ToggleBreakpointArgs>() {
+20 |     override val name: String = "toggle_debugger_breakpoint"
+21 |     override val description: String = """
+22 |         Toggles a debugger breakpoint at the specified line in a project file.
+23 |         Use this tool to add or remove breakpoints programmatically.
+24 |         Requires two parameters:
+25 |         - filePathInProject: The relative path to the file within the project
+26 |         - line: The line number where to toggle the breakpoint. The line number is starts at 1 for the first line.
+27 |         Returns one of two possible responses:
+28 |         - "ok" if the breakpoint was successfully toggled
+29 |         - "can't find project dir" if the project directory cannot be determined
+30 |         Note: Automatically navigates to the breakpoint location in the editor
+31 |     """
+32 | 
+33 |     override fun handle(
+34 |         project: Project,
+35 |         args: ToggleBreakpointArgs
+36 |     ): Response {
+37 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+38 |             ?: return Response(error = "can't find project dir")
+39 |         val virtualFile = LocalFileSystem.getInstance().findFileByNioFile(projectDir.resolveRel(args.filePathInProject))
+40 | 
+41 |         runWriteAction {
+42 |             val position = XSourcePositionImpl.create(virtualFile, args.line - 1)
+43 |             XBreakpointUtil.toggleLineBreakpoint(project, position, false, null, false, true, true).onSuccess {
+44 |                  invokeLater {
+45 |                      position.createNavigatable(project).navigate(true)
+46 |                  }
+47 |             }
+48 |         }
+49 | 
+50 |         return Response("ok")
+51 |     }
+52 | }
+53 | 
+54 | class GetBreakpointsTool : AbstractMcpTool<NoArgs>() {
+55 |     override val name: String = "get_debugger_breakpoints"
+56 |     override val description: String = """
+57 |         Retrieves a list of all line breakpoints currently set in the project.
+58 |         Use this tool to get information about existing debugger breakpoints.
+59 |         Returns a JSON-formatted list of breakpoints, where each entry contains:
+60 |         - path: The absolute file path where the breakpoint is set
+61 |         - line: The line number (1-based) where the breakpoint is located
+62 |         Returns an empty list ([]) if no breakpoints are set.
+63 |         Note: Only includes line breakpoints, not other breakpoint types (e.g., method breakpoints)
+64 |     """
+65 | 
+66 |     override fun handle(
+67 |         project: Project,
+68 |         args: NoArgs
+69 |     ): Response {
+70 |         val breakpointManager = XDebuggerManager.getInstance(project).breakpointManager
+71 |         return Response(breakpointManager.allBreakpoints
+72 |             .filterIsInstance<XLineBreakpoint<*>>() // Only consider line breakpoints
+73 |             .mapNotNull { breakpoint ->
+74 |                 val filePath = breakpoint.presentableFilePath
+75 |                 val line = breakpoint.line
+76 |                 if (filePath != null && line >= 0) {
+77 |                     filePath to (line + 1) // Convert line from 0-based to 1-based
+78 |                 } else {
+79 |                     null
+80 |                 }
+81 |             }.joinToString(",\n", prefix = "[", postfix = "]") {
+82 |                 """{"path": "${it.first}", "type": "${it.second}"}"""
+83 |             })
+84 |     }
+85 | }
+86 | 
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/git/vcsTools.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.mcpserverplugin.git
+  2 | 
+  3 | import com.intellij.compiler.cache.git.GitCommitsIterator
+  4 | import com.intellij.openapi.project.Project
+  5 | import com.intellij.openapi.project.guessProjectDir
+  6 | import com.intellij.openapi.vcs.ProjectLevelVcsManager
+  7 | import com.intellij.openapi.vcs.changes.ChangeListManager
+  8 | import com.intellij.openapi.vfs.toNioPathOrNull
+  9 | import git4idea.history.GitHistoryUtils
+ 10 | import git4idea.repo.GitRepositoryManager
+ 11 | import kotlinx.serialization.Serializable
+ 12 | import org.jetbrains.ide.mcp.NoArgs
+ 13 | import org.jetbrains.ide.mcp.Response
+ 14 | import org.jetbrains.mcpserverplugin.AbstractMcpTool
+ 15 | import kotlin.io.path.Path
+ 16 | 
+ 17 | @Serializable
+ 18 | data class CommitQuery(val text: String)
+ 19 | 
+ 20 | class FindCommitByTextTool : AbstractMcpTool<CommitQuery>() {
+ 21 |     override val name: String = "find_commit_by_message"
+ 22 |     override val description: String = """
+ 23 |         Searches for a commit based on the provided text or keywords in the project history.
+ 24 |         Useful for finding specific change sets or code modifications by commit messages or diff content.
+ 25 |         Takes a query parameter and returns the matching commit information.
+ 26 |         Returns matched commit hashes as a JSON array.
+ 27 |     """
+ 28 | 
+ 29 |     override fun handle(project: Project, args: CommitQuery): Response {
+ 30 |         val queryText = args.text
+ 31 |         val matchingCommits = mutableListOf<String>()
+ 32 | 
+ 33 |         try {
+ 34 |             val vcs = ProjectLevelVcsManager.getInstance(project).allVcsRoots
+ 35 |                 .mapNotNull { it.path }
+ 36 | 
+ 37 |             if (vcs.isEmpty()) {
+ 38 |                 return Response("Error: No VCS configured for this project")
+ 39 |             }
+ 40 | 
+ 41 |             // Iterate over each VCS root to search for commits
+ 42 |             vcs.forEach { vcsRoot ->
+ 43 |                 val repository = GitRepositoryManager.getInstance(project).getRepositoryForRoot(vcsRoot)
+ 44 |                     ?: return@forEach
+ 45 | 
+ 46 |                 val gitLog = GitHistoryUtils.history(project, repository.root)
+ 47 | 
+ 48 |                 gitLog.forEach { commit ->
+ 49 |                     if (commit.fullMessage.contains(queryText, ignoreCase = true)) {
+ 50 |                         matchingCommits.add(commit.id.toString())
+ 51 |                     }
+ 52 |                 }
+ 53 |             }
+ 54 | 
+ 55 |             // Check if any matches were found
+ 56 |             return if (matchingCommits.isNotEmpty()) {
+ 57 |                 Response(matchingCommits.joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" })
+ 58 |             } else {
+ 59 |                 Response("No commits found matching the query: $queryText")
+ 60 |             }
+ 61 | 
+ 62 |         } catch (e: Exception) {
+ 63 |             // Handle any errors that occur during the search
+ 64 |             return Response("Error while searching commits: ${e.message}")
+ 65 |         }
+ 66 |         return Response("Feature not yet implemented")
+ 67 |     }
+ 68 | }
+ 69 | 
+ 70 | class GetVcsStatusTool : AbstractMcpTool<NoArgs>() {
+ 71 |     override val name: String = "get_project_vcs_status"
+ 72 |     override val description: String = """
+ 73 |         Retrieves the current version control status of files in the project.
+ 74 |         Use this tool to get information about modified, added, deleted, and moved files in your VCS (e.g., Git).
+ 75 |         Returns a JSON-formatted list of changed files, where each entry contains:
+ 76 |         - path: The file path relative to project root
+ 77 |         - type: The type of change (e.g., MODIFICATION, ADDITION, DELETION, MOVED)
+ 78 |         Returns an empty list ([]) if no changes are detected or VCS is not configured.
+ 79 |         Returns error "project dir not found" if project directory cannot be determined.
+ 80 |         Note: Works with any VCS supported by the IDE, but is most commonly used with Git
+ 81 |     """
+ 82 | 
+ 83 |     override fun handle(project: Project, args: NoArgs): Response {
+ 84 |         val projectDir = project.guessProjectDir()?.toNioPathOrNull()
+ 85 |             ?: return Response(error = "project dir not found")
+ 86 | 
+ 87 |         val changeListManager = ChangeListManager.getInstance(project)
+ 88 |         val changes = changeListManager.allChanges
+ 89 | 
+ 90 |         return Response(changes.mapNotNull { change ->
+ 91 |             val absolutePath = change.virtualFile?.path ?: change.afterRevision?.file?.path
+ 92 |             val changeType = change.type
+ 93 | 
+ 94 |             if (absolutePath != null) {
+ 95 |                 try {
+ 96 |                     val relativePath = projectDir.relativize(Path(absolutePath)).toString()
+ 97 |                     relativePath to changeType
+ 98 |                 } catch (e: IllegalArgumentException) {
+ 99 |                     null  // Skip files outside project directory
+100 |                 }
+101 |             } else {
+102 |                 null
+103 |             }
+104 |         }.joinToString(",\n", prefix = "[", postfix = "]") {
+105 |             """{"path": "${it.first}", "type": "${it.second}"}"""
+106 |         })
+107 |     }
+108 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/notification/ClaudeConfigManager.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.mcpserverplugin.notification
+  2 | 
+  3 | import com.google.gson.Gson
+  4 | import com.google.gson.GsonBuilder
+  5 | import com.google.gson.JsonObject
+  6 | import com.google.gson.JsonParser
+  7 | import com.intellij.openapi.util.SystemInfo
+  8 | import java.nio.file.Path
+  9 | import java.nio.file.Paths
+ 10 | import kotlin.io.path.exists
+ 11 | 
+ 12 | object ClaudeConfigManager {
+ 13 |     private val configPath: Path = getConfigPath()
+ 14 |     private val gson = Gson()
+ 15 | 
+ 16 |     fun isProxyConfigured(): Boolean {
+ 17 |         return getExistingJsonObject()?.let { json ->
+ 18 |             json.getAsJsonObject("mcpServers")?.let { servers ->
+ 19 |                 isProxyInServers(servers)
+ 20 |             }
+ 21 |         } ?: false
+ 22 |     }
+ 23 | 
+ 24 |     fun modifyClaudeSettings() {
+ 25 |         val configFile = configPath.toFile()
+ 26 |         if (!configFile.exists()) {
+ 27 |             configFile.parentFile.mkdirs()
+ 28 |             configFile.createNewFile()
+ 29 |         }
+ 30 | 
+ 31 |         val jsonObject = getExistingJsonObject() ?: JsonObject()
+ 32 | 
+ 33 |         if (!jsonObject.has("mcpServers")) {
+ 34 |             jsonObject.add("mcpServers", JsonObject())
+ 35 |         }
+ 36 | 
+ 37 |         val mcpServers = jsonObject.getAsJsonObject("mcpServers")
+ 38 | 
+ 39 |         if (!isProxyInServers(mcpServers)) {
+ 40 |             val jetbrainsConfig = JsonObject().apply {
+ 41 |                 addProperty("command", "npx")
+ 42 |                 add("args", gson.toJsonTree(arrayOf("-y", "@jetbrains/mcp-proxy")))
+ 43 |             }
+ 44 |             mcpServers.add("jetbrains", jetbrainsConfig)
+ 45 | 
+ 46 |             try {
+ 47 |                 val prettyGson = GsonBuilder().setPrettyPrinting().create()
+ 48 |                 configFile.writeText(prettyGson.toJson(jsonObject))
+ 49 |             } catch (e: Exception) {
+ 50 |                 throw RuntimeException("Failed to write configuration file", e)
+ 51 |             }
+ 52 |         }
+ 53 |     }
+ 54 | 
+ 55 |     fun isClaudeClientInstalled(): Boolean {
+ 56 |         return getClaudeConfigPath().exists()
+ 57 |     }
+ 58 | 
+ 59 |     private fun getClaudeConfigPath(): Path {
+ 60 |         return when {
+ 61 |             SystemInfo.isMac ->
+ 62 |                 Paths.get(System.getProperty("user.home"), "Library", "Application Support", "Claude")
+ 63 | 
+ 64 |             SystemInfo.isWindows ->
+ 65 |                 Paths.get(System.getenv("APPDATA"), "Claude")
+ 66 | 
+ 67 |             else -> throw IllegalStateException("Unsupported operating system")
+ 68 |         }
+ 69 |     }
+ 70 | 
+ 71 |     private fun getConfigPath(): Path {
+ 72 |         return getClaudeConfigPath().resolve("claude_desktop_config.json")
+ 73 |     }
+ 74 | 
+ 75 |     private fun getExistingJsonObject(): JsonObject? {
+ 76 |         val configFile = configPath.toFile()
+ 77 |         if (!configFile.exists()) {
+ 78 |             return null
+ 79 |         }
+ 80 | 
+ 81 |         val jsonContent = try {
+ 82 |             configFile.readText()
+ 83 |         } catch (e: Exception) {
+ 84 |             return null
+ 85 |         }
+ 86 | 
+ 87 |         return try {
+ 88 |             JsonParser.parseString(jsonContent).asJsonObject
+ 89 |         } catch (e: Exception) {
+ 90 |             null
+ 91 |         }
+ 92 |     }
+ 93 | 
+ 94 |     private fun isProxyInServers(mcpServers: JsonObject): Boolean {
+ 95 |         for (serverEntry in mcpServers.entrySet()) {
+ 96 |             val serverConfig = serverEntry.value.asJsonObject
+ 97 |             if (serverConfig.has("command") && serverConfig.has("args")) {
+ 98 |                 val command = serverConfig.get("command").asString
+ 99 |                 val args = serverConfig.getAsJsonArray("args")
+100 |                 if (command == "npx" && args.any { it.asString.contains("@jetbrains/mcp-proxy") }) {
+101 |                     return true
+102 |                 }
+103 |             }
+104 |         }
+105 |         return false
+106 |     }
+107 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/settings/PluginSettings.kt:
+--------------------------------------------------------------------------------
+ 1 | package org.jetbrains.mcpserverplugin.settings
+ 2 | 
+ 3 | import com.intellij.openapi.components.BaseState
+ 4 | import com.intellij.openapi.components.PersistentStateComponent
+ 5 | import com.intellij.openapi.components.SimplePersistentStateComponent
+ 6 | import com.intellij.openapi.components.Storage
+ 7 | import com.intellij.openapi.components.State
+ 8 | import com.intellij.openapi.components.service
+ 9 | 
+10 | @State(name = "MyPluginSettings", storages = [Storage("mcpServer.xml")])
+11 | class PluginSettings : SimplePersistentStateComponent<MyState>(MyState()){}
+12 | 
+13 | class MyState : BaseState() {
+14 |     var shouldShowNodeNotification: Boolean by property(true)
+15 |     var shouldShowClaudeNotification: Boolean by property(true)
+16 |     var shouldShowClaudeSettingsNotification: Boolean by property(true)
+17 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/terminal/ShTerminalRunner.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.mcpserverplugin.terminal
+  2 | 
+  3 | import com.intellij.openapi.project.Project
+  4 | import com.intellij.openapi.util.NlsContexts
+  5 | import com.intellij.openapi.util.Pair
+  6 | import com.intellij.openapi.util.io.FileUtil
+  7 | import com.intellij.openapi.wm.ToolWindowManager
+  8 | import com.intellij.terminal.JBTerminalWidget
+  9 | import com.intellij.terminal.ui.TerminalWidget
+ 10 | import com.intellij.ui.content.Content
+ 11 | import com.intellij.ui.content.ContentManager
+ 12 | import com.jediterm.terminal.ProcessTtyConnector
+ 13 | import com.jediterm.terminal.TtyConnector
+ 14 | import org.jetbrains.plugins.terminal.ShellTerminalWidget
+ 15 | import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
+ 16 | import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+ 17 | import org.jetbrains.plugins.terminal.TerminalUtil
+ 18 | import org.jetbrains.plugins.terminal.arrangement.TerminalWorkingDirectoryManager
+ 19 | 
+ 20 | object ShTerminalRunner {
+ 21 |     fun run(
+ 22 |         project: Project,
+ 23 |         command: String,
+ 24 |         workingDirectory: String,
+ 25 |         @NlsContexts.TabTitle title: String,
+ 26 |         activateToolWindow: Boolean
+ 27 |     ): TerminalWidget? {
+ 28 |         val terminalToolWindowManager = TerminalToolWindowManager.getInstance(project)
+ 29 |         val window = ToolWindowManager.getInstance(project).getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
+ 30 |             ?: return null
+ 31 | 
+ 32 |         val contentManager = window.contentManager
+ 33 |         val pair = getSuitableProcess(project, contentManager, workingDirectory)
+ 34 | 
+ 35 |         if (pair == null) {
+ 36 |             val widget = terminalToolWindowManager.createShellWidget(
+ 37 |                 workingDirectory,
+ 38 |                 title,
+ 39 |                 activateToolWindow,
+ 40 |                 activateToolWindow
+ 41 |             )
+ 42 |             widget.sendCommandToExecute(command)
+ 43 | 
+ 44 |             return widget
+ 45 |         }
+ 46 | 
+ 47 |         if (activateToolWindow) {
+ 48 |             window.activate(null)
+ 49 |         }
+ 50 | 
+ 51 |         pair.first.displayName = title
+ 52 |         contentManager.setSelectedContent(pair.first)
+ 53 |         pair.second.sendCommandToExecute(command)
+ 54 |         return pair.second
+ 55 |     }
+ 56 | 
+ 57 |     fun isAvailable(project: Project): Boolean {
+ 58 |         val window = ToolWindowManager.getInstance(project).getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
+ 59 |         return window != null && window.isAvailable
+ 60 |     }
+ 61 | 
+ 62 |     private fun getSuitableProcess(
+ 63 |         project: Project,
+ 64 |         contentManager: ContentManager,
+ 65 |         workingDirectory: String
+ 66 |     ): Pair<Content, TerminalWidget>? {
+ 67 |         val selectedContent = contentManager.selectedContent
+ 68 |         if (selectedContent != null) {
+ 69 |             getSuitableProcess(project, selectedContent, workingDirectory)?.let { return it }
+ 70 |         }
+ 71 | 
+ 72 |         return contentManager.contents
+ 73 |             .asSequence()
+ 74 |             .mapNotNull { content -> getSuitableProcess(project, content, workingDirectory) }
+ 75 |             .firstOrNull()
+ 76 |     }
+ 77 | 
+ 78 |     fun getSuitableProcess(
+ 79 |         project: Project,
+ 80 |         content: Content,
+ 81 |         workingDirectory: String
+ 82 |     ): Pair<Content, TerminalWidget>? {
+ 83 |         val widget = TerminalToolWindowManager.findWidgetByContent(content) ?: return null
+ 84 | 
+ 85 |         if (widget is JBTerminalWidget && widget !is ShellTerminalWidget) {
+ 86 |             return null
+ 87 |         }
+ 88 | 
+ 89 |         if (widget is ShellTerminalWidget && widget.typedShellCommand.isNotEmpty()) {
+ 90 |             return null
+ 91 |         }
+ 92 | 
+ 93 |         val processTtyConnector = ShellTerminalWidget.getProcessTtyConnector(widget.ttyConnector) ?: return null
+ 94 |         if (TerminalUtil.hasRunningCommands(processTtyConnector as TtyConnector)) {
+ 95 |             return null
+ 96 |         }
+ 97 | 
+ 98 |         val currentWorkingDirectory = TerminalWorkingDirectoryManager.getWorkingDirectory(widget)
+ 99 |         if (!FileUtil.pathsEqual(workingDirectory, currentWorkingDirectory)) {
+100 |             return null
+101 |         }
+102 | 
+103 |         return Pair(content, widget)
+104 |     }
+105 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/kotlin/org/jetbrains/mcpserverplugin/terminal/Terminal.kt:
+--------------------------------------------------------------------------------
+  1 | package org.jetbrains.mcpserverplugin.terminal
+  2 | 
+  3 | import com.intellij.openapi.application.ApplicationManager
+  4 | import com.intellij.openapi.project.Project
+  5 | import com.intellij.openapi.ui.DialogWrapper
+  6 | import com.intellij.ui.dsl.builder.panel
+  7 | import com.jediterm.terminal.TtyConnector
+  8 | import kotlinx.serialization.Serializable
+  9 | import org.jetbrains.ide.mcp.NoArgs
+ 10 | import org.jetbrains.ide.mcp.Response
+ 11 | import org.jetbrains.mcpserverplugin.AbstractMcpTool
+ 12 | import org.jetbrains.plugins.terminal.ShellTerminalWidget
+ 13 | import org.jetbrains.plugins.terminal.TerminalUtil
+ 14 | import org.jetbrains.plugins.terminal.TerminalView
+ 15 | import java.util.concurrent.CompletableFuture
+ 16 | import java.util.concurrent.TimeUnit
+ 17 | import java.util.concurrent.TimeoutException
+ 18 | import javax.swing.JComponent
+ 19 | 
+ 20 | val maxLineCount = 2000
+ 21 | val timeout = TimeUnit.MINUTES.toMillis(2)
+ 22 | 
+ 23 | class GetTerminalTextTool : AbstractMcpTool<NoArgs>() {
+ 24 |     override val name: String = "get_terminal_text"
+ 25 |     override val description: String = """
+ 26 |         Retrieves the current text content from the first active terminal in the IDE.
+ 27 |         Use this tool to access the terminal's output and command history.
+ 28 |         Returns one of two possible responses:
+ 29 |         - The terminal's text content if a terminal exists
+ 30 |         - empty string if no terminal is open or available
+ 31 |         Note: Only captures text from the first terminal if multiple terminals are open
+ 32 |     """
+ 33 | 
+ 34 |     override fun handle(project: Project, args: NoArgs): Response {
+ 35 |         val text = com.intellij.openapi.application.runReadAction<String?> {
+ 36 |             TerminalView.getInstance(project).getWidgets().firstOrNull()?.text
+ 37 |         }
+ 38 |         return Response(text ?: "")
+ 39 |     }
+ 40 | }
+ 41 | 
+ 42 | @Serializable
+ 43 | data class ExecuteTerminalCommandArgs(val command: String)
+ 44 | 
+ 45 | class ExecuteTerminalCommandTool : AbstractMcpTool<ExecuteTerminalCommandArgs>() {
+ 46 |     override val name: String = "execute_terminal_command"
+ 47 |     override val description: String = """
+ 48 |         Executes a specified shell command in the IDE's integrated terminal.
+ 49 |         Use this tool to run terminal commands within the IDE environment.
+ 50 |         Requires a command parameter containing the shell command to execute.
+ 51 |         Important features and limitations:
+ 52 |         - Checks if process is running before collecting output
+ 53 |         - Limits output to $maxLineCount lines (truncates excess)
+ 54 |         - Times out after $timeout milliseconds with notification
+ 55 |         Returns possible responses:
+ 56 |         - Terminal output (truncated if >$maxLineCount lines)
+ 57 |         - Output with interruption notice if timed out
+ 58 |         - Error messages for various failure cases
+ 59 |     """
+ 60 | 
+ 61 |     private fun collectTerminalOutput(widget: ShellTerminalWidget): String? {
+ 62 |         val processTtyConnector = ShellTerminalWidget.getProcessTtyConnector(widget.ttyConnector) ?: return null
+ 63 | 
+ 64 |         // Check if the process is still running
+ 65 |         if (!TerminalUtil.hasRunningCommands(processTtyConnector as TtyConnector)) {
+ 66 |             return widget.text
+ 67 |         }
+ 68 |         return null
+ 69 |     }
+ 70 | 
+ 71 |     private fun formatOutput(output: String): String {
+ 72 |         val lines = output.lines()
+ 73 |         return if (lines.size > maxLineCount) {
+ 74 |             lines.take(maxLineCount).joinToString("\n") + "\n... (output truncated at 200 lines)"
+ 75 |         } else {
+ 76 |             output
+ 77 |         }
+ 78 |     }
+ 79 | 
+ 80 |     override fun handle(project: Project, args: ExecuteTerminalCommandArgs): Response {
+ 81 |         val future = CompletableFuture<Response>()
+ 82 | 
+ 83 |         ApplicationManager.getApplication().invokeAndWait {
+ 84 |             val confirmationDialog = object : DialogWrapper(project, true) {
+ 85 |                 init {
+ 86 |                     init()
+ 87 |                     title = "Confirm Command Execution"
+ 88 |                 }
+ 89 | 
+ 90 |                 override fun createCenterPanel(): JComponent? {
+ 91 |                     return panel {
+ 92 |                         row {
+ 93 |                             label("Do you want to run command `${args.command.take(100)}` in the terminal?")
+ 94 |                         }
+ 95 |                     }
+ 96 |                 }
+ 97 |             }
+ 98 |             confirmationDialog.show()
+ 99 | 
+100 |             if (!confirmationDialog.isOK) {
+101 |                 future.complete(Response(error = "canceled"))
+102 |                 return@invokeAndWait
+103 |             }
+104 | 
+105 |             val terminalWidget =
+106 |                 ShTerminalRunner.run(project, "clear; " + args.command, project.basePath ?: "", "MCP Command", true)
+107 |             val shellWidget =
+108 |                 if (terminalWidget != null) ShellTerminalWidget.asShellJediTermWidget(terminalWidget) else null
+109 | 
+110 |             if (shellWidget == null) {
+111 |                 future.complete(Response(error = "No terminal available"))
+112 |                 return@invokeAndWait
+113 |             }
+114 | 
+115 |             ApplicationManager.getApplication().executeOnPooledThread {
+116 |                 var output: String? = null
+117 |                 var isInterrupted = false
+118 | 
+119 |                 val sleep = 300L
+120 |                 for (i in 1..timeout / sleep) {
+121 |                     Thread.sleep(sleep)
+122 |                     output = collectTerminalOutput(shellWidget)
+123 |                     if (output != null) break
+124 |                 }
+125 | 
+126 |                 if (output == null) {
+127 |                     output = shellWidget.text
+128 |                     isInterrupted = true
+129 |                 }
+130 | 
+131 |                 val formattedOutput = formatOutput(output)
+132 |                 val finalOutput = if (isInterrupted) {
+133 |                     "$formattedOutput\n... (Command execution interrupted after $timeout milliseconds)"
+134 |                 } else {
+135 |                     formattedOutput
+136 |                 }
+137 | 
+138 |                 future.complete(Response(finalOutput))
+139 |             }
+140 |         }
+141 | 
+142 |         try {
+143 |             return future.get(
+144 |                 timeout + 2000,
+145 |                 TimeUnit.MILLISECONDS
+146 |             ) // Give slightly more time than the internal timeout
+147 |         } catch (e: TimeoutException) {
+148 |             return Response(error = "Command execution timed out after $timeout milliseconds")
+149 |         } catch (e: Exception) {
+150 |             return Response(error = "Execution error: ${e.message}")
+151 |         }
+152 |     }
+153 | }
+
+
+--------------------------------------------------------------------------------
+/src/main/resources/META-INF/mcpServer-git.xml:
+--------------------------------------------------------------------------------
+1 | <idea-plugin>
+2 |     <extensions defaultExtensionNs="com.intellij">
+3 |         <mcpServer.mcpTool implementation="org.jetbrains.mcpserverplugin.git.FindCommitByTextTool"/>
+4 |     </extensions>
+5 | </idea-plugin>
+
+
+--------------------------------------------------------------------------------
+/src/main/resources/META-INF/mcpServer-terminal.xml:
+--------------------------------------------------------------------------------
+1 | <idea-plugin>
+2 |     <extensions defaultExtensionNs="com.intellij">
+3 |         <mcpServer.mcpTool implementation="org.jetbrains.mcpserverplugin.terminal.GetTerminalTextTool"/>
+4 |         <mcpServer.mcpTool implementation="org.jetbrains.mcpserverplugin.terminal.ExecuteTerminalCommandTool"/>
+5 |     </extensions>
+6 | </idea-plugin>
+
+
+--------------------------------------------------------------------------------
+/src/main/resources/META-INF/plugin.xml:
+--------------------------------------------------------------------------------
+ 1 | <idea-plugin>
+ 2 |     <id>com.intellij.mcpServer</id>
+ 3 |     <name>MCP Server</name>
+ 4 |     <description><![CDATA[
+ 5 |     MCP (Model Context Protocol) Server for IntelliJ IDEs
+ 6 |     <p>
+ 7 |         This plugin integrates the MCP server into IntelliJ-based IDEs, enabling seamless communication between
+ 8 |         Large Language Models (LLMs) and your development environment. It provides tools for interacting with the IDE,
+ 9 |         including:
+10 |     </p>
+11 |     <ul>
+12 |         <li>Reading the current file</li>
+13 |         <li>Executing terminal commands</li>
+14 |         <li>Setting breakpoints</li>
+15 |         <li>Searching project files</li>
+16 |         <li>And more</li>
+17 |     </ul>
+18 |     <p>
+19 |         To connect with Claude Desktop, you must install and register the MCP Proxy in Claude.
+20 |     </p>
+21 |     <p>
+22 |         For detailed instructions, visit the
+23 |         <a href="https://github.com/JetBrains/mcp-jetbrains/blob/main/README.md" target="_blank">GitHub repository</a>.
+24 |     </p>
+25 |   ]]></description>
+26 |     <vendor>JetBrains</vendor>
+27 | 
+28 |     <depends>com.intellij.modules.lang</depends>
+29 |     <depends config-file="mcpServer-terminal.xml" optional="true">org.jetbrains.plugins.terminal</depends>
+30 |     <depends config-file="mcpServer-git.xml" optional="true">Git4Idea</depends>
+31 | 
+32 |     <extensionPoints>
+33 |         <extensionPoint name="mcpTool"
+34 |                         interface="org.jetbrains.mcpserverplugin.McpTool"
+35 |                         dynamic="true"/>
+36 |     </extensionPoints>
+37 | 
+38 |     <extensions defaultExtensionNs="com.intellij">
+39 |         <httpRequestHandler implementation="org.jetbrains.ide.mcp.MCPService"/>
+40 |         <notificationGroup id="MCPServerPlugin" displayType="BALLOON"/>
+41 |         <postStartupActivity implementation="org.jetbrains.mcpserverplugin.MCPServerStartupValidator"/>
+42 |         <applicationService serviceImplementation="org.jetbrains.mcpserverplugin.settings.PluginSettings"/>"/>
+43 |     </extensions>
+44 | </idea-plugin>
+
+
+--------------------------------------------------------------------------------
+/src/main/resources/META-INF/pluginIcon.svg:
+--------------------------------------------------------------------------------
+ 1 | <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+ 2 | <g clip-path="url(#clip0_19_13)">
+ 3 | <path d="M18 84.8528L85.8822 16.9706C95.2548 7.59798 110.451 7.59798 119.823 16.9706V16.9706C129.196 26.3431 129.196 41.5391 119.823 50.9117L68.5581 102.177" stroke="black" stroke-width="12" stroke-linecap="round"/>
+ 4 | <path d="M69.2652 101.47L119.823 50.9117C129.196 41.5391 144.392 41.5391 153.765 50.9117L154.118 51.2652C163.491 60.6378 163.491 75.8338 154.118 85.2063L92.7248 146.6C89.6006 149.724 89.6006 154.789 92.7248 157.913L105.331 170.52" stroke="black" stroke-width="12" stroke-linecap="round"/>
+ 5 | <path d="M102.853 33.9411L52.6482 84.1457C43.2756 93.5183 43.2756 108.714 52.6482 118.087V118.087C62.0208 127.459 77.2167 127.459 86.5893 118.087L136.794 67.8822" stroke="black" stroke-width="12" stroke-linecap="round"/>
+ 6 | </g>
+ 7 | <defs>
+ 8 | <clipPath id="clip0_19_13">
+ 9 | <rect width="180" height="180" fill="white"/>
+10 | </clipPath>
+11 | </defs>
+12 | </svg>
+13 | 
+
+
+--------------------------------------------------------------------------------
